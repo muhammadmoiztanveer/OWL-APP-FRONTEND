@@ -1,0 +1,84 @@
+/*
+Template Name: Minible - Admin & Dashboard Template
+Author: Themesbrand
+Version: 2.6.0
+Website: https://themesbrand.com/
+Contact: themesbrand@gmail.com
+File: Main Css File
+*/
+
+//Fonts
+@import "../resources/scss/custom/fonts/fonts";
+
+//Core files
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+@import "../resources/scss/variables";
+@import "~bootstrap/scss/mixins.scss";
+
+@import "../resources/scss/variables-dark";
+
+// Structure
+@import "../resources/scss/custom/structure/general";
+@import "../resources/scss/custom/structure/topbar";
+@import "../resources/scss/custom/structure/page-head";
+@import "../resources/scss/custom/structure/footer";
+@import "../resources/scss/custom/structure/right-sidebar";
+@import "../resources/scss/custom/structure/vertical";
+@import "../resources/scss/custom/structure/horizontal-nav";
+@import "../resources/scss/custom/structure/layouts";
+
+// Components
+@import "../resources/scss/custom/components/root";
+@import "../resources/scss/custom/components/waves";
+@import "../resources/scss/custom/components/avatar";
+@import "../resources/scss/custom/components/alerts";
+@import "../resources/scss/custom/components/accordion";
+@import "../resources/scss/custom/components/helper";
+@import "../resources/scss/custom/components/preloader";
+@import "../resources/scss/custom/components/forms";
+@import "../resources/scss/custom/components/widgets";
+@import "../resources/scss/custom/components/demos";
+@import "../resources/scss/custom/components/print";
+
+
+// Plugins
+@import "../resources/scss/custom/plugins/custom-scrollbar";
+@import "../resources/scss/custom/plugins/calendar";
+@import "../resources/scss/custom/plugins/session-timeout";
+@import "../resources/scss/custom/plugins/range-slider";
+@import "../resources/scss/custom/plugins/sweatalert2";
+@import "../resources/scss/custom/plugins/rating";
+@import "../resources/scss/custom/plugins/toastr";
+@import "../resources/scss/custom/plugins/parsley";
+@import "../resources/scss/custom/plugins/select2";
+@import "../resources/scss/custom/plugins/switch";
+@import "../resources/scss/custom/plugins/colorpicker";
+@import "../resources/scss/custom/plugins/datepicker";
+@import "../resources/scss/custom/plugins/bootstrap-touchspin";
+@import "../resources/scss/custom/plugins/repeater";
+@import "../resources/scss/custom/plugins/form-editors";
+@import "../resources/scss/custom/plugins/xeditable";
+@import "../resources/scss/custom/plugins/form-upload";
+@import "../resources/scss/custom/plugins/form-wizard";
+@import "../resources/scss/custom/plugins/responsive-table";
+@import "../resources/scss/custom/plugins/datatable";
+@import "../resources/scss/custom/plugins/table-editable";
+@import "../resources/scss/custom/plugins/apexcharts";
+@import "../resources/scss/custom/plugins/flot";
+@import "../resources/scss/custom/plugins/sparkline-chart";
+@import "../resources/scss/custom/plugins/google-map";
+@import "../resources/scss/custom/plugins/vector-maps";
+@import "../resources/scss/custom/plugins/leaflet-maps";
+
+
+// Pages
+@import "../resources/scss/custom/pages/authentication";
+@import "../resources/scss/custom/pages/ecommerce";
+@import "../resources/scss/custom/pages/email";
+@import "../resources/scss/custom/pages/chat";
+@import "../resources/scss/custom/pages/coming-soon";
+@import "../resources/scss/custom/pages/timeline";
+@import "../resources/scss/custom/pages/file-manager";
+@import "../resources/scss/custom/pages/extras-pages";
+
