@@ -4,10 +4,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useHasPermission } from '@/hooks/useHasPermission'
 
 export default function Sidebar() {
   const pathname = usePathname()
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set())
+  const canViewRoles = useHasPermission('view roles')
+  const canViewPermissions = useHasPermission('view permissions')
 
   useEffect(() => {
     // Initialize simplebar for sidebar scrolling
@@ -294,6 +297,53 @@ export default function Sidebar() {
             </li>
 
             <li className="menu-title">Pages</li>
+
+            <li>
+              <Link href="/profile" className={isActive('/profile') ? 'active' : ''}>
+                <i className="uil-user"></i>
+                <span>Profile</span>
+              </Link>
+            </li>
+
+            {(canViewRoles || canViewPermissions) && (
+              <li>
+                <a
+                  href="javascript: void(0);"
+                  className={`has-arrow waves-effect ${isExpanded('admin') ? 'mm-active' : ''}`}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    toggleMenu('admin')
+                  }}
+                >
+                  <i className="uil-shield-check"></i>
+                  <span>Access Control</span>
+                </a>
+                <ul className={`sub-menu ${isExpanded('admin') ? 'mm-show' : ''}`}>
+                  {canViewRoles && (
+                    <li>
+                      <Link 
+                        href="/roles" 
+                        className={isActive('/roles') ? 'mm-active' : ''}
+                      >
+                        <i className="uil-shield"></i>
+                        <span>Roles</span>
+                      </Link>
+                    </li>
+                  )}
+                  {canViewPermissions && (
+                    <li>
+                      <Link 
+                        href="/permissions" 
+                        className={isActive('/permissions') ? 'mm-active' : ''}
+                      >
+                        <i className="uil-key-skeleton"></i>
+                        <span>Permissions</span>
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              </li>
+            )}
 
             <li>
               <a

@@ -1,26 +1,43 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import Script from 'next/script'
 
 export default function TimelinePage() {
+  const [jQueryLoaded, setJQueryLoaded] = useState(false)
+  const [owlCarouselLoaded, setOwlCarouselLoaded] = useState(false)
+
   useEffect(() => {
-    // Initialize timeline carousel if owl carousel is available
-    if (typeof window !== 'undefined' && (window as any).jQuery && (window as any).jQuery.fn.owlCarousel) {
-      const $ = (window as any).jQuery
-      $('#timeline-carousel').owlCarousel({
-        loop: false,
-        margin: 10,
-        nav: true,
-        responsive: {
-          0: { items: 1 },
-          600: { items: 2 },
-          1000: { items: 3 },
-        },
-      })
+    // Initialize timeline carousel if both jQuery and owl carousel are available
+    const initCarousel = () => {
+      if (typeof window !== 'undefined' && (window as any).jQuery && (window as any).jQuery.fn && (window as any).jQuery.fn.owlCarousel) {
+        const $ = (window as any).jQuery
+        const carousel = $('#timeline-carousel')
+        if (carousel.length > 0 && !carousel.data('owlCarousel')) {
+          carousel.owlCarousel({
+            loop: false,
+            margin: 10,
+            nav: true,
+            responsive: {
+              0: { items: 1 },
+              600: { items: 2 },
+              1000: { items: 3 },
+            },
+          })
+        }
+      } else {
+        // Retry if jQuery or owlCarousel not yet loaded
+        setTimeout(initCarousel, 100)
+      }
     }
-  }, [])
+    
+    // Only try to initialize if both are loaded
+    if (jQueryLoaded && owlCarouselLoaded) {
+      // Wait a bit for scripts to fully initialize
+      setTimeout(initCarousel, 100)
+    }
+  }, [jQueryLoaded, owlCarouselLoaded])
 
   const events = [
     { date: '03 May', title: 'First event', description: 'If several languages coalesce, the grammar of the resulting the individual' },
@@ -42,7 +59,16 @@ export default function TimelinePage() {
   return (
     <>
       <Breadcrumb pagetitle="Utility" title="Timeline" />
-      <Script src="/assets/libs/owl-carousel/owl-carousel.min.js" strategy="lazyOnload" />
+      <Script 
+        src="/assets/libs/jquery/jquery.min.js" 
+        strategy="beforeInteractive"
+        onLoad={() => setJQueryLoaded(true)}
+      />
+      <Script 
+        src="/assets/libs/owl-carousel/owl-carousel.min.js" 
+        strategy="lazyOnload"
+        onLoad={() => setOwlCarouselLoaded(true)}
+      />
 
       <div className="row">
         <div className="col-lg-12">

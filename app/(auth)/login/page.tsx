@@ -1,35 +1,53 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useForm } from 'react-hook-form'
+import { useAuth } from '@/contexts/AuthContext'
+import { LoginRequest } from '@/lib/types'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('admin@themesbrand.com')
-  const [password, setPassword] = useState('12345678')
-  const [remember, setRemember] = useState(false)
-  const [error, setError] = useState('')
+  const { login, isAuthenticated, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setError,
+  } = useForm<LoginRequest>()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push('/dashboard')
+    }
+  }, [isAuthenticated, authLoading, router])
+
+  if (authLoading || isAuthenticated) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    )
+  }
+
+  const onSubmit = async (data: LoginRequest) => {
     setLoading(true)
-
-    // Frontend-only: Just simulate login
-    setTimeout(() => {
-      setLoading(false)
-      // Store in localStorage for frontend-only auth
-      if (email && password) {
-        localStorage.setItem('isLoggedIn', 'true')
-        localStorage.setItem('userEmail', email)
-        router.push('/dashboard')
-      } else {
-        setError('Please enter email and password')
+    try {
+      await login(data)
+    } catch (error: any) {
+      if (error.response?.data?.errors) {
+        const errors = error.response.data.errors
+        if (errors.email) setError('email', { message: errors.email[0] })
+        if (errors.password) setError('password', { message: errors.password[0] })
       }
-    }, 500)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -66,26 +84,27 @@ export default function LoginPage() {
                   <p className="text-muted">Sign in to continue to Minible.</p>
                 </div>
                 <div className="p-2 mt-4">
-                  <form onSubmit={handleSubmit}>
-                    {error && (
-                      <div className="alert alert-danger" role="alert">
-                        {error}
-                      </div>
-                    )}
+                  <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="mb-3">
                       <label className="form-label" htmlFor="email">
                         Email
                       </label>
                       <input
-                        type="text"
-                        className="form-control"
-                        name="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        type="email"
+                        className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                         id="email"
                         placeholder="Enter Email address"
-                        required
+                        {...register('email', {
+                          required: 'Email is required',
+                          pattern: {
+                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                            message: 'Invalid email address',
+                          },
+                        })}
                       />
+                      {errors.email && (
+                        <div className="invalid-feedback">{errors.email.message}</div>
+                      )}
                     </div>
 
                     <div className="mb-3">
@@ -94,35 +113,25 @@ export default function LoginPage() {
                           Forgot password?
                         </Link>
                       </div>
-                      <label className="form-label" htmlFor="userpassword">
+                      <label className="form-label" htmlFor="password">
                         Password
                       </label>
                       <input
                         type="password"
-                        className="form-control"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        name="password"
-                        id="userpassword"
+                        className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                        id="password"
                         placeholder="Enter password"
-                        required
+                        {...register('password', {
+                          required: 'Password is required',
+                          minLength: {
+                            value: 8,
+                            message: 'Password must be at least 8 characters',
+                          },
+                        })}
                       />
-                    </div>
-
-                    <div className="form-check">
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        id="auth-remember-check"
-                        checked={remember}
-                        onChange={(e) => setRemember(e.target.checked)}
-                      />
-                      <label
-                        className="form-check-label"
-                        htmlFor="auth-remember-check"
-                      >
-                        Remember me
-                      </label>
+                      {errors.password && (
+                        <div className="invalid-feedback">{errors.password.message}</div>
+                      )}
                     </div>
 
                     <div className="mt-3 text-end">
@@ -131,46 +140,21 @@ export default function LoginPage() {
                         type="submit"
                         disabled={loading}
                       >
-                        {loading ? 'Logging in...' : 'Log In'}
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Logging in...
+                          </>
+                        ) : (
+                          'Log In'
+                        )}
                       </button>
-                    </div>
-
-                    <div className="mt-4 text-center">
-                      <div className="signin-other-title">
-                        <h5 className="font-size-14 mb-3 title">Sign in with</h5>
-                      </div>
-                      <ul className="list-inline">
-                        <li className="list-inline-item">
-                          <a
-                            href="#"
-                            className="social-list-item bg-primary text-white border-primary"
-                          >
-                            <i className="mdi mdi-facebook"></i>
-                          </a>
-                        </li>
-                        <li className="list-inline-item">
-                          <a
-                            href="#"
-                            className="social-list-item bg-info text-white border-info"
-                          >
-                            <i className="mdi mdi-twitter"></i>
-                          </a>
-                        </li>
-                        <li className="list-inline-item">
-                          <a
-                            href="#"
-                            className="social-list-item bg-danger text-white border-danger"
-                          >
-                            <i className="mdi mdi-google"></i>
-                          </a>
-                        </li>
-                      </ul>
                     </div>
 
                     <div className="mt-4 text-center">
                       <p className="mb-0">
                         Don&apos;t have an account ?{' '}
-                        <Link href="/auth/register" className="fw-medium text-primary">
+                        <Link href="/register" className="fw-medium text-primary">
                           Signup now
                         </Link>
                       </p>

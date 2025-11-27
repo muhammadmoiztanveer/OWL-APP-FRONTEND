@@ -1,31 +1,61 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useForm } from 'react-hook-form'
+import { useAuth } from '@/contexts/AuthContext'
+import { RegisterRequest } from '@/lib/types'
 
 export default function RegisterPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [terms, setTerms] = useState(false)
+  const { register: registerUser, isAuthenticated, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+    setError,
+  } = useForm<RegisterRequest>()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const password = watch('password')
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push('/dashboard')
+    }
+  }, [isAuthenticated, authLoading, router])
+
+  if (authLoading || isAuthenticated) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    )
+  }
+
+  const onSubmit = async (data: RegisterRequest) => {
     setLoading(true)
-
-    // Frontend-only: Just simulate registration
-    setTimeout(() => {
-      setLoading(false)
-      if (email && username && password && terms) {
-        localStorage.setItem('isLoggedIn', 'true')
-        localStorage.setItem('userEmail', email)
-        router.push('/dashboard')
+    try {
+      await registerUser(data)
+    } catch (error: any) {
+      if (error.response?.data?.errors) {
+        const apiErrors = error.response.data.errors
+        Object.keys(apiErrors).forEach((key) => {
+          if (key in data) {
+            setError(key as keyof RegisterRequest, {
+              message: apiErrors[key][0],
+            })
+          }
+        })
       }
-    }, 500)
+    } finally {
+      setLoading(false)
+      }
   }
 
   return (
@@ -37,14 +67,14 @@ export default function RegisterPage() {
               <Link href="/dashboard" className="mb-5 d-block auth-logo">
                 <Image
                   src="/assets/images/logo-dark.png"
-                  alt=""
+                  alt="Logo"
                   height={22}
                   width={120}
                   className="logo logo-dark"
                 />
                 <Image
                   src="/assets/images/logo-light.png"
-                  alt=""
+                  alt="Logo"
                   height={22}
                   width={120}
                   className="logo logo-light"
@@ -58,71 +88,97 @@ export default function RegisterPage() {
             <div className="card">
               <div className="card-body p-4">
                 <div className="text-center mt-2">
-                  <h5 className="text-primary">Register Account</h5>
+                  <h5 className="text-primary">Free Register</h5>
                   <p className="text-muted">Get your free Minible account now.</p>
                 </div>
                 <div className="p-2 mt-4">
-                  <form onSubmit={handleSubmit}>
+                  <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="mb-3">
-                      <label className="form-label" htmlFor="useremail">
+                      <label className="form-label" htmlFor="name">
+                        Name
+                      </label>
+                      <input
+                        type="text"
+                        className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+                        id="name"
+                        placeholder="Enter your name"
+                        {...register('name', {
+                          required: 'Name is required',
+                          minLength: {
+                            value: 2,
+                            message: 'Name must be at least 2 characters',
+                          },
+                        })}
+                      />
+                      {errors.name && (
+                        <div className="invalid-feedback">{errors.name.message}</div>
+                      )}
+                    </div>
+
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="email">
                         Email
                       </label>
                       <input
                         type="email"
-                        className="form-control"
-                        id="useremail"
-                        placeholder="Enter email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
+                        className={`form-control ${errors.email ? 'is-invalid' : ''}`}
+                        id="email"
+                        placeholder="Enter Email address"
+                        {...register('email', {
+                          required: 'Email is required',
+                          pattern: {
+                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                            message: 'Invalid email address',
+                          },
+                        })}
                       />
+                      {errors.email && (
+                        <div className="invalid-feedback">{errors.email.message}</div>
+                      )}
                     </div>
 
                     <div className="mb-3">
-                      <label className="form-label" htmlFor="username">
-                        Username
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="username"
-                        placeholder="Enter username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    <div className="mb-3">
-                      <label className="form-label" htmlFor="userpassword">
+                      <label className="form-label" htmlFor="password">
                         Password
                       </label>
                       <input
                         type="password"
-                        className="form-control"
-                        id="userpassword"
+                        className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+                        id="password"
                         placeholder="Enter password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
+                        {...register('password', {
+                          required: 'Password is required',
+                          minLength: {
+                            value: 8,
+                            message: 'Password must be at least 8 characters',
+                          },
+                        })}
                       />
+                      {errors.password && (
+                        <div className="invalid-feedback">{errors.password.message}</div>
+                      )}
                     </div>
 
-                    <div className="form-check">
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        id="auth-terms-condition-check"
-                        checked={terms}
-                        onChange={(e) => setTerms(e.target.checked)}
-                        required
-                      />
-                      <label className="form-check-label" htmlFor="auth-terms-condition-check">
-                        I accept{' '}
-                        <a href="javascript: void(0);" className="text-dark">
-                          Terms and Conditions
-                        </a>
+                    <div className="mb-3">
+                      <label className="form-label" htmlFor="password_confirmation">
+                        Confirm Password
                       </label>
+                      <input
+                        type="password"
+                        className={`form-control ${errors.password_confirmation ? 'is-invalid' : ''}`}
+                        id="password_confirmation"
+                        placeholder="Confirm password"
+                        {...register('password_confirmation', {
+                          required: 'Please confirm your password',
+                          validate: (value) =>
+                            value === password || 'Passwords do not match',
+                        })}
+                      />
+                      {errors.password_confirmation && (
+                        <div className="invalid-feedback">
+                          {errors.password_confirmation.message}
+                        </div>
+                      )}
                     </div>
 
                     <div className="mt-3 text-end">
@@ -131,49 +187,22 @@ export default function RegisterPage() {
                         type="submit"
                         disabled={loading}
                       >
-                        {loading ? 'Registering...' : 'Register'}
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Registering...
+                          </>
+                        ) : (
+                          'Register'
+                        )}
                       </button>
                     </div>
 
                     <div className="mt-4 text-center">
-                      <div className="signin-other-title">
-                        <h5 className="font-size-14 mb-3 title">Sign up using</h5>
-                      </div>
-
-                      <ul className="list-inline">
-                        <li className="list-inline-item">
-                          <a
-                            href="javascript:void()"
-                            className="social-list-item bg-primary text-white border-primary"
-                          >
-                            <i className="mdi mdi-facebook"></i>
-                          </a>
-                        </li>
-                        <li className="list-inline-item">
-                          <a
-                            href="javascript:void()"
-                            className="social-list-item bg-info text-white border-info"
-                          >
-                            <i className="mdi mdi-twitter"></i>
-                          </a>
-                        </li>
-                        <li className="list-inline-item">
-                          <a
-                            href="javascript:void()"
-                            className="social-list-item bg-danger text-white border-danger"
-                          >
-                            <i className="mdi mdi-google"></i>
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-
-                    <div className="mt-4 text-center">
-                      <p className="text-muted mb-0">
+                      <p className="mb-0">
                         Already have an account ?{' '}
-                        <Link href="/auth/login" className="fw-medium text-primary">
-                          {' '}
-                          Login
+                        <Link href="/login" className="fw-medium text-primary">
+                          Sign in
                         </Link>
                       </p>
                     </div>
@@ -181,6 +210,7 @@ export default function RegisterPage() {
                 </div>
               </div>
             </div>
+
             <div className="mt-5 text-center">
               <p>
                 © {new Date().getFullYear()} Minible. Crafted with{' '}
@@ -193,4 +223,3 @@ export default function RegisterPage() {
     </div>
   )
 }
-
