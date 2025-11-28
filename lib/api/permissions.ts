@@ -4,11 +4,17 @@ import {
   Permission,
   CreatePermissionRequest,
   UpdatePermissionRequest,
+  PermissionGroup,
 } from '@/lib/types'
 
 export const permissionsApi = {
   list: async (): Promise<ApiResponse<Permission[]>> => {
     const response = await api.get<ApiResponse<Permission[]>>('/permissions')
+    return response.data
+  },
+
+  grouped: async (): Promise<ApiResponse<PermissionGroup[]>> => {
+    const response = await api.get<ApiResponse<PermissionGroup[]>>('/permissions/grouped')
     return response.data
   },
 

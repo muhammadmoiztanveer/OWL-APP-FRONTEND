@@ -5,12 +5,15 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useHasPermission } from '@/hooks/useHasPermission'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
 
 export default function Sidebar() {
   const pathname = usePathname()
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set())
-  const canViewRoles = useHasPermission('view roles')
-  const canViewPermissions = useHasPermission('view permissions')
+  const isAdmin = useIsAdmin()
+  const canViewRoles = useHasPermission('view roles') || isAdmin
+  const canViewPermissions = useHasPermission('view permissions') || isAdmin
+  const canViewModules = useHasPermission('view modules') || isAdmin
 
   useEffect(() => {
     // Initialize simplebar for sidebar scrolling
@@ -29,7 +32,12 @@ export default function Sidebar() {
       }
       initSimplebar()
     }
-  }, [])
+    
+    // Auto-expand Access Control menu if on roles, permissions, or modules page
+    if (pathname === '/roles' || pathname === '/permissions' || pathname?.startsWith('/modules')) {
+      setExpandedMenus((prev) => new Set([...prev, 'admin']))
+    }
+  }, [pathname])
 
   const toggleMenu = (menuId: string) => {
     setExpandedMenus((prev) => {
@@ -305,11 +313,12 @@ export default function Sidebar() {
               </Link>
             </li>
 
+            {/* Access Control Menu - Always show for admins or users with permissions */}
             {(canViewRoles || canViewPermissions) && (
               <li>
                 <a
                   href="javascript: void(0);"
-                  className={`has-arrow waves-effect ${isExpanded('admin') ? 'mm-active' : ''}`}
+                  className={`has-arrow waves-effect ${isExpanded('admin') ? 'mm-active' : ''} ${isActive('/roles') || isActive('/permissions') || isActive('/modules') ? 'mm-active' : ''}`}
                   onClick={(e) => {
                     e.preventDefault()
                     toggleMenu('admin')
@@ -318,7 +327,7 @@ export default function Sidebar() {
                   <i className="uil-shield-check"></i>
                   <span>Access Control</span>
                 </a>
-                <ul className={`sub-menu ${isExpanded('admin') ? 'mm-show' : ''}`}>
+                <ul className={`sub-menu ${isExpanded('admin') || isActive('/roles') || isActive('/permissions') || isActive('/modules') ? 'mm-show' : ''}`}>
                   {canViewRoles && (
                     <li>
                       <Link 
@@ -338,6 +347,17 @@ export default function Sidebar() {
                       >
                         <i className="uil-key-skeleton"></i>
                         <span>Permissions</span>
+                      </Link>
+                    </li>
+                  )}
+                  {canViewModules && (
+                    <li>
+                      <Link 
+                        href="/modules" 
+                        className={isActive('/modules') ? 'mm-active' : ''}
+                      >
+                        <i className="uil-folder"></i>
+                        <span>Modules</span>
                       </Link>
                     </li>
                   )}

@@ -64,3 +64,28 @@ export interface UpdatePermissionRequest {
   name: string
 }
 
+// Module Types
+export interface Module {
+  id: number
+  name: string
+  label: string
+  permissions?: Permission[]
+}
+
+export interface PermissionGroup {
+  module: string
+  label: string
+  permissions: Permission[]
+}
+
+// Module Request Types
+export interface CreateModuleRequest {
+  name: string
+  label: string
+}
+
+export interface UpdateModuleRequest {
+  name?: string
+  label?: string
+}
+

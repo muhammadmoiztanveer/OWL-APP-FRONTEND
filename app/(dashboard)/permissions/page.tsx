@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { permissionsApi } from '@/lib/api/permissions'
 import { Permission, CreatePermissionRequest, UpdatePermissionRequest } from '@/lib/types'
 import { useHasPermission } from '@/hooks/useHasPermission'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import toast from 'react-hot-toast'
 
@@ -14,10 +15,11 @@ export default function PermissionsPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingPermission, setEditingPermission] = useState<Permission | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
-  const canView = useHasPermission('view permissions')
-  const canCreate = useHasPermission('create permissions')
-  const canEdit = useHasPermission('edit permissions')
-  const canDelete = useHasPermission('delete permissions')
+  const isAdmin = useIsAdmin()
+  const canView = useHasPermission('view permissions') || isAdmin
+  const canCreate = useHasPermission('create permissions') || isAdmin
+  const canEdit = useHasPermission('edit permissions') || isAdmin
+  const canDelete = useHasPermission('delete permissions') || isAdmin
 
   const {
     register,
@@ -41,7 +43,12 @@ export default function PermissionsPage() {
       setLoading(true)
       const response = await permissionsApi.list()
       if (response.success && response.data) {
-        setPermissions(response.data)
+        // Filter out admin-related permissions - admins can do anything
+        setPermissions(
+          response.data.filter(
+            (perm) => perm?.name && !perm.name.toLowerCase().includes('admin') && perm.name.toLowerCase() !== 'admin'
+          )
+        )
       }
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to load permissions')
@@ -119,7 +126,12 @@ export default function PermissionsPage() {
           <div className="card">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-4">
-                <h4 className="card-title mb-0">Permissions Management</h4>
+                <div>
+                  <h4 className="card-title mb-0">Permissions Management</h4>
+                  <p className="text-muted mb-0">
+                    Create and manage permissions. Permissions define what actions users can perform.
+                  </p>
+                </div>
                 {canCreate && (
                   <button className="btn btn-primary" onClick={openCreateModal}>
                     <i className="mdi mdi-plus me-2"></i>Create Permission
