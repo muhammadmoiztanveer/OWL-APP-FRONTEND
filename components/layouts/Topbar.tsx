@@ -2,10 +2,13 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useHasPermission } from '@/hooks/useHasPermission'
 
 export default function Topbar() {
-  const [userName] = useState('User') // Frontend-only, no auth
+  const { user, logout } = useAuth()
+  const canViewRoles = useHasPermission('view roles')
+  const canViewPermissions = useHasPermission('view permissions')
 
   return (
     <header id="page-topbar">
@@ -393,32 +396,37 @@ export default function Topbar() {
                 width={32}
                 height={32}
               />
-              <span className="d-none d-xl-inline-block ms-1 fw-medium font-size-15">{userName}</span>
+              <span className="d-none d-xl-inline-block ms-1 fw-medium font-size-15">
+                {user?.name || 'User'}
+              </span>
               <i className="uil-angle-down d-none d-xl-inline-block font-size-15"></i>
             </button>
             <div className="dropdown-menu dropdown-menu-end">
-              <a className="dropdown-item" href="#">
+              <Link className="dropdown-item" href="/profile">
                 <i className="uil uil-user-circle font-size-18 align-middle text-muted me-1"></i>{' '}
                 <span className="align-middle">View Profile</span>
-              </a>
-              <a className="dropdown-item" href="#">
-                <i className="uil uil-wallet font-size-18 align-middle me-1 text-muted"></i>{' '}
-                <span className="align-middle">My Wallet</span>
-              </a>
-              <a className="dropdown-item d-block" href="#">
-                <i className="uil uil-cog font-size-18 align-middle me-1 text-muted"></i>{' '}
-                <span className="align-middle">
-                  Settings <span className="badge bg-success-subtle text-success rounded-pill mt-1 ms-2">03</span>
-                </span>
-              </a>
-              <a className="dropdown-item" href="#">
-                <i className="uil uil-lock-alt font-size-18 align-middle me-1 text-muted"></i>{' '}
-                <span className="align-middle">Lock screen</span>
-              </a>
-              <Link className="dropdown-item" href="/auth/login">
+              </Link>
+              {canViewRoles && (
+                <Link className="dropdown-item" href="/roles">
+                  <i className="uil uil-shield font-size-18 align-middle me-1 text-muted"></i>{' '}
+                  <span className="align-middle">Roles</span>
+                </Link>
+              )}
+              {canViewPermissions && (
+                <Link className="dropdown-item" href="/permissions">
+                  <i className="uil uil-key-skeleton font-size-18 align-middle me-1 text-muted"></i>{' '}
+                  <span className="align-middle">Permissions</span>
+                </Link>
+              )}
+              <div className="dropdown-divider"></div>
+              <button
+                className="dropdown-item"
+                onClick={logout}
+                style={{ border: 'none', background: 'none', width: '100%', textAlign: 'left' }}
+              >
                 <i className="uil uil-sign-out-alt font-size-18 align-middle me-1 text-muted"></i>{' '}
                 <span className="align-middle">Sign out</span>
-              </Link>
+              </button>
             </div>
           </div>
 

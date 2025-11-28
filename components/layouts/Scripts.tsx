@@ -1,9 +1,24 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Script from 'next/script'
 
 export default function Scripts() {
+  const [jQueryLoaded, setJQueryLoaded] = useState(false)
+  const [metismenuLoaded, setMetismenuLoaded] = useState(false)
+
+  useEffect(() => {
+    // Check if jQuery is loaded
+    const checkJQuery = () => {
+      if (typeof window !== 'undefined' && (window as any).jQuery) {
+        setJQueryLoaded(true)
+      } else {
+        setTimeout(checkJQuery, 100)
+      }
+    }
+    checkJQuery()
+  }, [])
+
   useEffect(() => {
     // Initialize scripts after component mounts
     if (typeof window !== 'undefined') {
@@ -94,10 +109,23 @@ export default function Scripts() {
 
   return (
     <>
+      <Script 
+        src="/assets/libs/jquery/jquery.min.js" 
+        strategy="beforeInteractive"
+      />
       <Script src="/assets/libs/bootstrap/bootstrap.min.js" strategy="lazyOnload" />
+      {jQueryLoaded && (
+        <Script 
+          src="/assets/libs/metismenu/metismenu.min.js" 
+          strategy="lazyOnload"
+          onLoad={() => setMetismenuLoaded(true)}
+        />
+      )}
       <Script src="/assets/libs/simplebar/simplebar.min.js" strategy="lazyOnload" />
       <Script src="/assets/libs/node-waves/node-waves.min.js" strategy="lazyOnload" />
-      <Script src="/assets/js/app.min.js" strategy="lazyOnload" />
+      {metismenuLoaded && (
+        <Script src="/assets/js/app.min.js" strategy="lazyOnload" />
+      )}
     </>
   )
 }
