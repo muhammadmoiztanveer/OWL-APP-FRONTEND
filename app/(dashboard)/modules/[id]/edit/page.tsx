@@ -18,8 +18,7 @@ export default function EditModulePage() {
   const [loading, setLoading] = useState(false)
   const [module, setModule] = useState<Module | null>(null)
   const [loadingModule, setLoadingModule] = useState(true)
-  const isAdmin = useIsAdmin()
-  const canEdit = useHasPermission('edit modules') || isAdmin
+  const canEdit = useHasPermission('edit modules')
 
   const {
     register,

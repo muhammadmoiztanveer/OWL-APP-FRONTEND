@@ -1,12 +1,12 @@
 import { useAuth } from '@/contexts/AuthContext'
+import { hasRole } from '@/lib/utils/permissions'
 
 export function useHasRole(roleName: string): boolean {
-  const { user } = useAuth()
+  const { user, impersonatingUser, isImpersonating } = useAuth()
 
-  if (!user || !user.roles) {
-    return false
-  }
+  // When impersonating, check impersonated user's roles
+  const userToCheck = isImpersonating ? impersonatingUser : user
 
-  return user.roles.some((role) => role.name === roleName)
+  return hasRole(userToCheck, roleName)
 }
 

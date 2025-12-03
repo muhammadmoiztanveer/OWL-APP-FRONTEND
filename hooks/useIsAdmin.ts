@@ -1,11 +1,12 @@
 import { useAuth } from '@/contexts/AuthContext'
-import { useHasRole } from './useHasRole'
+import { isAdmin } from '@/lib/utils/permissions'
 
 /**
  * Check if the current user is an admin
  * Admin is determined by having the "admin" role
  */
 export function useIsAdmin(): boolean {
-  return useHasRole('admin')
+  const { user } = useAuth()
+  return isAdmin(user)
 }
 

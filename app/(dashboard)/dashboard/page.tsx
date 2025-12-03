@@ -1,14 +1,50 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useHasRole } from '@/hooks/useHasRole'
+import { useDashboardStats } from '@/hooks/doctor/useDashboardStats'
 import Breadcrumb from '@/components/common/Breadcrumb'
+import PermissionGate from '@/components/common/PermissionGate'
+import UnauthorizedMessage from '@/components/common/UnauthorizedMessage'
+import StatusBadge from '@/components/common/StatusBadge'
+import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 
 // Dynamically import ApexCharts to avoid SSR issues
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
+// Simple date formatter
+const formatDate = (dateString: string | undefined) => {
+  if (!dateString) return '-'
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+  } catch {
+    return dateString
+  }
+}
+
 export default function DashboardPage() {
+  const { user, refreshProfile, impersonatingUser, isImpersonating } = useAuth()
+  const hasDoctorRole = useHasRole('doctor')
+  const isAdmin = useHasRole('admin')
+  
+  // Refresh permissions when page loads (only once on mount)
+  useEffect(() => {
+    refreshProfile().catch(() => {
+      // Silently fail
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty array - only run once on mount
+
+  // When impersonating, show doctor dashboard
+  // Otherwise, show doctor dashboard if user has doctor role (and not admin)
+  const shouldShowDoctorDashboard = isImpersonating || (hasDoctorRole && !isAdmin)
+
+  // Fetch doctor dashboard stats if showing doctor dashboard
+  const { data: doctorDashboardData, isLoading: doctorLoading, error: doctorError } = useDashboardStats()
   useEffect(() => {
     // Initialize counterup (vanilla JS version)
     if (typeof window !== 'undefined') {
@@ -37,6 +73,154 @@ export default function DashboardPage() {
     }
   }, [])
 
+  // Show doctor dashboard if impersonating or user is a doctor (and not admin)
+  if (shouldShowDoctorDashboard) {
+    if (doctorError && (doctorError as any).response?.status === 403) {
+      return (
+        <>
+          <Breadcrumb pagetitle="MENTAL HEALTH ASSESSMENT SYSTEM" title="Dashboard" />
+          <UnauthorizedMessage message="You do not have permission to view the dashboard." />
+        </>
+      )
+    }
+
+    return (
+      <PermissionGate permission="patient.view" fallback={<UnauthorizedMessage />}>
+        <Breadcrumb pagetitle="MENTAL HEALTH ASSESSMENT SYSTEM" title="Dashboard" />
+
+        {doctorLoading ? (
+          <div className="text-center py-5">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        ) : doctorDashboardData ? (
+          <>
+            {/* Stats Cards */}
+            <div className="row">
+              <div className="col-md-4">
+                <div className="card">
+                  <div className="card-body">
+                    <div className="d-flex align-items-center">
+                      <div className="flex-grow-1">
+                        <h4 className="mb-0">{doctorDashboardData.stats.total_active_patients}</h4>
+                        <p className="text-muted mb-0">Total Active Patients</p>
+                      </div>
+                      <div className="avatar-sm">
+                        <div className="avatar-title bg-primary-subtle text-primary rounded-circle fs-18">
+                          <i className="mdi mdi-account-group"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="card">
+                  <div className="card-body">
+                    <div className="d-flex align-items-center">
+                      <div className="flex-grow-1">
+                        <h4 className="mb-0">{doctorDashboardData.stats.total_assessments}</h4>
+                        <p className="text-muted mb-0">Total Assessments</p>
+                      </div>
+                      <div className="avatar-sm">
+                        <div className="avatar-title bg-success-subtle text-success rounded-circle fs-18">
+                          <i className="mdi mdi-clipboard-text"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-4">
+                <div className="card">
+                  <div className="card-body">
+                    <div className="d-flex align-items-center">
+                      <div className="flex-grow-1">
+                        <h4 className="mb-0">{doctorDashboardData.stats.pending_orders}</h4>
+                        <p className="text-muted mb-0">Pending Orders</p>
+                      </div>
+                      <div className="avatar-sm">
+                        <div className="avatar-title bg-warning-subtle text-warning rounded-circle fs-18">
+                          <i className="mdi mdi-clock-outline"></i>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Assessments */}
+            <div className="row mt-4">
+              <div className="col-12">
+                <div className="card">
+                  <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="card-title mb-0">Recent Assessments</h5>
+                      <Link href="/doctor/assessments" className="btn btn-sm btn-primary">
+                        View All
+                      </Link>
+                    </div>
+                    {doctorDashboardData.recent_assessments && doctorDashboardData.recent_assessments.length > 0 ? (
+                      <div className="table-responsive">
+                        <table className="table table-nowrap align-middle mb-0">
+                          <thead>
+                            <tr>
+                              <th>Patient</th>
+                              <th>Type</th>
+                              <th>Score</th>
+                              <th>Status</th>
+                              <th>Date</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {doctorDashboardData.recent_assessments.map((assessment) => (
+                              <tr key={assessment.id}>
+                                <td>{assessment.patient?.name || 'N/A'}</td>
+                                <td>{assessment.assessment_type}</td>
+                                <td>
+                                  <span className="fw-bold">{assessment.score ?? 'N/A'}</span>
+                                </td>
+                                <td>
+                                  <StatusBadge status={assessment.status} />
+                                </td>
+                                <td>{formatDate(assessment.completed_on)}</td>
+                                <td>
+                                  <Link
+                                    href={`/doctor/assessments/${assessment.id}`}
+                                    className="btn btn-sm btn-danger"
+                                  >
+                                    <i className="mdi mdi-eye me-1"></i>
+                                    View
+                                  </Link>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-muted mb-0">No recent assessments</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-5">
+            <p className="text-muted">No data available</p>
+          </div>
+        )}
+      </PermissionGate>
+    )
+  }
+
+  // Show admin/default dashboard for admin users
   const salesAnalyticsOptions = {
     chart: {
       height: 339,
@@ -77,7 +261,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Breadcrumb pagetitle="Minible" title="Dashboard" />
+      <Breadcrumb pagetitle="MENTAL HEALTH ASSESSMENT SYSTEM" title="Dashboard" />
 
       <div className="row">
         <div className="col-md-6 col-xl-3">

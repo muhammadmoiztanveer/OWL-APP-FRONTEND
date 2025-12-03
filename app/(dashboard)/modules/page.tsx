@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { modulesApi } from '@/lib/api/modules'
 import { Module } from '@/lib/types'
 import { useHasPermission } from '@/hooks/useHasPermission'
-import { useIsAdmin } from '@/hooks/useIsAdmin'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import toast from 'react-hot-toast'
 
@@ -16,11 +15,10 @@ export default function ModulesPage() {
   const [loading, setLoading] = useState(true)
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
-  const isAdmin = useIsAdmin()
-  const canView = useHasPermission('view modules') || isAdmin
-  const canCreate = useHasPermission('create modules') || isAdmin
-  const canEdit = useHasPermission('edit modules') || isAdmin
-  const canDelete = useHasPermission('delete modules') || isAdmin
+  const canView = useHasPermission('view modules')
+  const canCreate = useHasPermission('create modules')
+  const canEdit = useHasPermission('edit modules')
+  const canDelete = useHasPermission('delete modules')
 
   useEffect(() => {
     if (canView) {

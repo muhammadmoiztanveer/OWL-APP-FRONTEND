@@ -11,11 +11,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.11",
     "apexcharts": "^4.0.0",
     "axios": "^1.13.2",
     "bootstrap": "^5.3.3",
     "chart.js": "^4.4.5",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "flatpickr": "^4.6.13",
     "fullcalendar": "^6.1.15",
     "jspdf": "^2.5.1",

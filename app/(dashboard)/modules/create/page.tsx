@@ -6,7 +6,6 @@ import { useForm } from 'react-hook-form'
 import { modulesApi } from '@/lib/api/modules'
 import { CreateModuleRequest } from '@/lib/types'
 import { useHasPermission } from '@/hooks/useHasPermission'
-import { useIsAdmin } from '@/hooks/useIsAdmin'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
@@ -14,8 +13,7 @@ import Link from 'next/link'
 export default function CreateModulePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const isAdmin = useIsAdmin()
-  const canCreate = useHasPermission('create modules') || isAdmin
+  const canCreate = useHasPermission('create modules')
 
   const {
     register,

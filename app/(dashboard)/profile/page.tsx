@@ -10,9 +10,13 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) {
-      refreshProfile()
+      // Initial refresh on mount to ensure latest data
+      refreshProfile().catch(() => {
+        // Error handled by AuthContext
+      })
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty array - only run once on mount when user exists
 
   const handleRefresh = async () => {
     setRefreshing(true)
@@ -47,22 +51,29 @@ export default function ProfilePage() {
                 <p className="text-muted">{user?.email}</p>
               </div>
 
-              <div className="mt-4">
-                <button
-                  className="btn btn-primary w-100"
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                >
-                  {refreshing ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      Refreshing...
-                    </>
-                  ) : (
-                    'Refresh Profile'
-                  )}
-                </button>
-              </div>
+                  <div className="mt-4">
+                    <button
+                      className="btn btn-primary w-100"
+                      onClick={handleRefresh}
+                      disabled={refreshing}
+                      title="Refresh your profile and permissions to get the latest updates"
+                    >
+                      {refreshing ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          Refreshing...
+                        </>
+                      ) : (
+                        <>
+                          <i className="mdi mdi-refresh me-2"></i>
+                          Refresh Profile & Permissions
+                        </>
+                      )}
+                    </button>
+                    <p className="text-muted small mt-2 mb-0">
+                      Click to refresh your profile and permissions. Use this if your permissions were recently updated by an admin.
+                    </p>
+                  </div>
             </div>
           </div>
         </div>
@@ -87,45 +98,16 @@ export default function ProfilePage() {
                       <th scope="row">Email:</th>
                       <td>{user?.email}</td>
                     </tr>
+                    <tr>
+                      <th scope="row">Account Type:</th>
+                      <td className="text-capitalize">{user?.account_type || 'N/A'}</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
 
-          <div className="card">
-            <div className="card-body">
-              <h4 className="card-title mb-4">Roles</h4>
-              {user?.roles && user.roles.length > 0 ? (
-                <div className="d-flex flex-wrap gap-2">
-                  {user.roles.map((role) => (
-                    <span key={role.id} className="badge bg-primary">
-                      {role.name}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted mb-0">No roles assigned</p>
-              )}
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-body">
-              <h4 className="card-title mb-4">Permissions</h4>
-              {user?.permissions && user.permissions.length > 0 ? (
-                <div className="d-flex flex-wrap gap-2">
-                  {user.permissions.map((permission) => (
-                    <span key={permission.id} className="badge bg-success">
-                      {permission.name}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted mb-0">No permissions assigned</p>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </>

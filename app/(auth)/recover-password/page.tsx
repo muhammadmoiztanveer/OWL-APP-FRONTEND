@@ -46,7 +46,7 @@ export default function RecoverPasswordPage() {
                 <div className="card-body p-4">
                   <div className="text-center mt-2">
                     <h5 className="text-primary">Reset Password</h5>
-                    <p className="text-muted">Reset Password with Minible.</p>
+                    <p className="text-muted">Reset Password with MENTAL HEALTH ASSESSMENT SYSTEM.</p>
                   </div>
                   <div className="p-2 mt-4">
                     {submitted ? (
@@ -101,7 +101,7 @@ export default function RecoverPasswordPage() {
               </div>
               <div className="mt-5 text-center">
                 <p>
-                  © {new Date().getFullYear()} Minible. Crafted with{' '}
+                  © {new Date().getFullYear()} MENTAL HEALTH ASSESSMENT SYSTEM. Crafted with{' '}
                   <i className="mdi mdi-heart text-danger"></i> by Themesbrand
                 </p>
               </div>

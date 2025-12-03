@@ -44,7 +44,22 @@ class ApiClient {
       async (error: AxiosError<ApiResponse>) => {
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
-        // Handle 401 Unauthorized
+        // Handle 401 Unauthorized - redirect to login
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          // Don't redirect if already on login page
+          if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+            this.clearAuth()
+            window.location.href = '/login'
+          }
+        }
+
+        // Handle 403 Forbidden - show error but don't redirect
+        if (error.response?.status === 403) {
+          // Error will be handled by the calling component
+          return Promise.reject(error)
+        }
+
+        // Handle 401 Unauthorized - token refresh logic
         if (error.response?.status === 401 && !originalRequest._retry) {
           if (this.isRefreshing) {
             // If already refreshing, queue this request
