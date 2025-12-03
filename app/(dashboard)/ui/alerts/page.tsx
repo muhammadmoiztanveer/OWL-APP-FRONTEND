@@ -5,7 +5,7 @@ import Breadcrumb from '@/components/common/Breadcrumb'
 export default function AlertsPage() {
   return (
     <>
-      <Breadcrumb pagetitle="Minible" title="Alerts" />
+      <Breadcrumb pagetitle="MENTAL HEALTH ASSESSMENT SYSTEM" title="Alerts" />
 
       <div className="row">
         <div className="col-xl-6">

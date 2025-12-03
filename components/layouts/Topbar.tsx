@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useHasPermission } from '@/hooks/useHasPermission'
 
 export default function Topbar() {
-  const { user, logout } = useAuth()
+  const { user, logout, impersonatingUser, isImpersonating, stopImpersonating } = useAuth()
   const canViewRoles = useHasPermission('view roles')
   const canViewPermissions = useHasPermission('view permissions')
 
@@ -397,11 +397,43 @@ export default function Topbar() {
                 height={32}
               />
               <span className="d-none d-xl-inline-block ms-1 fw-medium font-size-15">
-                {user?.name || 'User'}
+                {isImpersonating ? impersonatingUser?.name : user?.name || 'User'}
               </span>
+              {isImpersonating && impersonatingUser?.roles && impersonatingUser.roles.length > 0 && (
+                <span className="d-none d-xl-inline-block ms-2 badge bg-success-subtle text-success font-size-12">
+                  {impersonatingUser.roles[0].name.toUpperCase()}
+                </span>
+              )}
+              {!isImpersonating && user?.roles && user.roles.length > 0 && (
+                <span className="d-none d-xl-inline-block ms-2 badge bg-primary-subtle text-primary font-size-12">
+                  {user.roles[0].name.toUpperCase()}
+                </span>
+              )}
+              {isImpersonating && (
+                <span className="d-none d-xl-inline-block ms-2 badge bg-warning-subtle text-warning font-size-12">
+                  IMPERSONATING
+                </span>
+              )}
               <i className="uil-angle-down d-none d-xl-inline-block font-size-15"></i>
             </button>
             <div className="dropdown-menu dropdown-menu-end">
+              {isImpersonating && (
+                <>
+                  <div className="dropdown-item-text">
+                    <small className="text-muted">Viewing as: <strong>{impersonatingUser?.name}</strong></small>
+                  </div>
+                  <div className="dropdown-divider"></div>
+                  <button
+                    className="dropdown-item"
+                    onClick={stopImpersonating}
+                    style={{ border: 'none', background: 'none', width: '100%', textAlign: 'left' }}
+                  >
+                    <i className="uil uil-arrow-left font-size-18 align-middle me-1 text-warning"></i>{' '}
+                    <span className="align-middle">Exit Doctor View</span>
+                  </button>
+                  <div className="dropdown-divider"></div>
+                </>
+              )}
               <Link className="dropdown-item" href="/profile">
                 <i className="uil uil-user-circle font-size-18 align-middle text-muted me-1"></i>{' '}
                 <span className="align-middle">View Profile</span>

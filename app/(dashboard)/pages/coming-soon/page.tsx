@@ -78,7 +78,7 @@ export default function ComingSoonPage() {
                 </div>
               </div>
 
-              <h4 className="mt-5">Let&apos;s get started with Minible</h4>
+              <h4 className="mt-5">Let&apos;s get started with MENTAL HEALTH ASSESSMENT SYSTEM</h4>
               <p className="text-muted">It will be as simple as Occidental in fact it will be Occidental.</p>
 
               <div className="row justify-content-center mt-5">

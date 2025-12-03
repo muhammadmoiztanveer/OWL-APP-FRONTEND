@@ -3,12 +3,13 @@ import { Inter } from 'next/font/google'
 import '../styles/app.scss'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { Toaster } from 'react-hot-toast'
+import { QueryProvider } from '@/providers/QueryProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Minible - Admin Dashboard',
-  description: 'Professional Next.js Admin Dashboard Template',
+  title: 'MENTAL HEALTH ASSESSMENT SYSTEM',
+  description: 'Mental Health Assessment System - Professional Dashboard',
 }
 
 export default function RootLayout({
@@ -24,10 +25,12 @@ export default function RootLayout({
         <link href="/assets/css/app.css" id="app-style" rel="stylesheet" type="text/css" />
       </head>
       <body className={inter.className} suppressHydrationWarning>
-        <AuthProvider>
-          {children}
-          <Toaster position="top-right" />
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            {children}
+            <Toaster position="top-right" />
+          </AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   )

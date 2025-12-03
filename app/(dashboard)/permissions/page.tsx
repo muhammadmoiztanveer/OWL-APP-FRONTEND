@@ -15,11 +15,10 @@ export default function PermissionsPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingPermission, setEditingPermission] = useState<Permission | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
-  const isAdmin = useIsAdmin()
-  const canView = useHasPermission('view permissions') || isAdmin
-  const canCreate = useHasPermission('create permissions') || isAdmin
-  const canEdit = useHasPermission('edit permissions') || isAdmin
-  const canDelete = useHasPermission('delete permissions') || isAdmin
+  const canView = useHasPermission('view permissions')
+  const canCreate = useHasPermission('create permissions')
+  const canEdit = useHasPermission('edit permissions')
+  const canDelete = useHasPermission('delete permissions')
 
   const {
     register,

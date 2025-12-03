@@ -6,6 +6,7 @@ import Footer from '@/components/layouts/Footer'
 import RightSidebar from '@/components/layouts/RightSidebar'
 import Scripts from '@/components/layouts/Scripts'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
+import FloatingActionButtons from '@/components/doctor/FloatingActionButtons'
 
 export default function DashboardLayout({
   children,
@@ -26,6 +27,7 @@ export default function DashboardLayout({
         <RightSidebar />
       </div>
       <Scripts />
+      <FloatingActionButtons />
     </ProtectedRoute>
   )
 }

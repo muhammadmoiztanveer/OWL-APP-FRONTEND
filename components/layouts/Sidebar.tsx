@@ -5,15 +5,32 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useHasPermission } from '@/hooks/useHasPermission'
-import { useIsAdmin } from '@/hooks/useIsAdmin'
+import { useHasRole } from '@/hooks/useHasRole'
+import { useAuth } from '@/contexts/AuthContext'
+import { usePermissions } from '@/hooks/usePermissions'
 
 export default function Sidebar() {
   const pathname = usePathname()
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set())
-  const isAdmin = useIsAdmin()
-  const canViewRoles = useHasPermission('view roles') || isAdmin
-  const canViewPermissions = useHasPermission('view permissions') || isAdmin
-  const canViewModules = useHasPermission('view modules') || isAdmin
+  const { isImpersonating, impersonatingUser } = useAuth()
+  const canViewRoles = useHasPermission('view roles')
+  const canViewPermissions = useHasPermission('view permissions')
+  const canViewModules = useHasPermission('view modules')
+  const canViewDoctors = useHasPermission('view doctors')
+  const hasDoctorRole = useHasRole('doctor')
+  const isAdmin = useHasRole('admin')
+  const { hasPermission } = usePermissions()
+  const canViewPatients = useHasPermission('patient.view')
+  const canViewAssessmentOrders = useHasPermission('assessment-order.view')
+  const canViewAssessments = useHasPermission('assessment.view')
+  const canViewAssessmentQuestions = useHasPermission('assessment-question.view')
+  const hasPatientRole = useHasRole('patient')
+  const canViewBilling = hasPermission('billing.view')
+  const canManageBilling = hasPermission('billing.manage')
+
+  // When impersonating, show doctor modules based on impersonated user's permissions
+  // When not impersonating, hide doctor modules from admin
+  const shouldShowDoctorModules = isImpersonating || (hasDoctorRole && !isAdmin)
 
   useEffect(() => {
     // Initialize simplebar for sidebar scrolling
@@ -33,8 +50,8 @@ export default function Sidebar() {
       initSimplebar()
     }
     
-    // Auto-expand Access Control menu if on roles, permissions, or modules page
-    if (pathname === '/roles' || pathname === '/permissions' || pathname?.startsWith('/modules')) {
+    // Auto-expand Access Control menu if on roles, permissions, modules, assessment questions, or PDF queue page
+    if (pathname === '/roles' || pathname === '/permissions' || pathname?.startsWith('/modules') || pathname?.startsWith('/admin/assessment-questions') || pathname?.startsWith('/admin/pdf-queue')) {
       setExpandedMenus((prev) => new Set([...prev, 'admin']))
     }
   }, [pathname])
@@ -91,218 +108,156 @@ export default function Sidebar() {
             <li className="menu-title">Menu</li>
 
             <li>
-              <Link href="/dashboard" className={isActive('/dashboard') ? 'active' : ''}>
+              <Link 
+                href="/dashboard" 
+                className={isActive('/dashboard') ? 'active' : ''}
+              >
                 <i className="uil-home-alt"></i>
-                <span className="badge rounded-pill bg-primary float-end">01</span>
                 <span>Dashboard</span>
               </Link>
             </li>
 
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('layouts') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('layouts')
-                }}
-              >
-                <i className="uil-window-section"></i>
-                <span>Layouts</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('layouts') ? 'mm-show' : ''}`} aria-expanded={isExpanded('layouts')}>
+            {/* Show doctor-related menu items only when impersonating or user has doctor role (not admin) */}
+            {shouldShowDoctorModules && canViewPatients && (
+              <li>
+                <Link
+                  href="/doctor/patients"
+                  className={isActive('/doctor/patients') ? 'active' : ''}
+                >
+                  <i className="uil-users-alt"></i>
+                  <span>Patients</span>
+                </Link>
+              </li>
+            )}
+
+            {shouldShowDoctorModules && canViewAssessmentOrders && (
+              <li>
+                <Link
+                  href="/doctor/assessment-orders"
+                  className={isActive('/doctor/assessment-orders') ? 'active' : ''}
+                >
+                  <i className="uil-clipboard-notes"></i>
+                  <span>Assessment Orders</span>
+                </Link>
+              </li>
+            )}
+
+            {shouldShowDoctorModules && canViewAssessments && (
+              <>
                 <li>
-                  <a
-                    href="javascript: void(0);"
-                    className={`has-arrow ${isExpanded('layouts-vertical') ? 'mm-active' : ''}`}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      toggleMenu('layouts-vertical')
-                    }}
+                  <Link
+                    href="/doctor/assessments"
+                    className={isActive('/doctor/assessments') && !pathname?.includes('ready-for-review') ? 'active' : ''}
                   >
-                    Vertical
-                  </a>
-                  <ul className={`sub-menu ${isExpanded('layouts-vertical') ? 'mm-show' : ''}`}>
-                    <li>
-                      <Link href="/layouts/dark-sidebar">Dark Sidebar</Link>
-                    </li>
-                    <li>
-                      <Link href="/layouts/compact-sidebar">Compact Sidebar</Link>
-                    </li>
-                    <li>
-                      <Link href="/layouts/icon-sidebar">Icon Sidebar</Link>
-                    </li>
-                    <li>
-                      <Link href="/layouts/boxed">Boxed Width</Link>
-                    </li>
-                    <li>
-                      <Link href="/layouts/preloader">Preloader</Link>
-                    </li>
-                    <li>
-                      <Link href="/layouts/colored-sidebar">Colored Sidebar</Link>
-                    </li>
-                  </ul>
+                    <i className="uil-clipboard-alt"></i>
+                    <span>Assessments</span>
+                  </Link>
                 </li>
                 <li>
-                  <a
-                    href="javascript: void(0);"
-                    className={`has-arrow ${isExpanded('layouts-horizontal') ? 'mm-active' : ''}`}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      toggleMenu('layouts-horizontal')
-                    }}
+                  <Link
+                    href="/doctor/assessments/ready-for-review"
+                    className={isActive('/doctor/assessments/ready-for-review') ? 'active' : ''}
                   >
-                    Horizontal
-                  </a>
-                  <ul className={`sub-menu ${isExpanded('layouts-horizontal') ? 'mm-show' : ''}`}>
-                    <li>
-                      <Link href="/layouts/horizontal">Horizontal</Link>
-                    </li>
-                    <li>
-                      <Link href="/layouts/hori-topbar-dark">Dark Topbar</Link>
-                    </li>
-                    <li>
-                      <Link href="/layouts/hori-boxed-width">Boxed Width</Link>
-                    </li>
-                    <li>
-                      <Link href="/layouts/hori-preloader">Preloader</Link>
-                    </li>
-                  </ul>
+                    <i className="uil-check-circle"></i>
+                    <span>Ready for Review</span>
+                  </Link>
                 </li>
-              </ul>
-            </li>
+              </>
+            )}
 
-            <li className="menu-title">Apps</li>
-
-            <li>
-              <Link href="/apps/calendar" className={isActive('/apps/calendar') ? 'active' : ''}>
-                <i className="uil-calender"></i>
-                <span>Calendar</span>
+            {canViewDoctors && (
+              <li>
+                <Link href="/doctors" className={isActive('/doctors') ? 'active' : ''}>
+                  <i className="uil-user-md"></i>
+                  <span>Doctors</span>
               </Link>
             </li>
+            )}
 
-            <li>
-              <Link href="/apps/chat" className={isActive('/apps/chat') ? 'active' : ''}>
-                <i className="uil-comments-alt"></i>
-                <span>Chat</span>
+            {isAdmin && (
+              <li>
+                <Link href="/users" className={isActive('/users') ? 'active' : ''}>
+                  <i className="uil-users-alt"></i>
+                  <span>Users</span>
               </Link>
             </li>
+            )}
 
-            <li>
-              <Link href="/apps/file-manager" className={isActive('/apps/file-manager') ? 'active' : ''}>
-                <i className="uil-comments-alt"></i>
-                <span>File Manager</span>
-              </Link>
-            </li>
+            {/* Patient Portal - My Assessments */}
+            {(hasPatientRole || isAdmin) && (
+              <li>
+                <Link
+                  href="/patient/assessments"
+                  className={isActive('/patient/assessments') ? 'active' : ''}
+                >
+                  <i className="uil-clipboard-alt"></i>
+                  <span>My Assessments</span>
+                </Link>
+              </li>
+            )}
 
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('ecommerce') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('ecommerce')
-                }}
-              >
-                <i className="uil-store"></i>
-                <span>Ecommerce</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('ecommerce') ? 'mm-show' : ''}`}>
-                <li>
-                  <Link href="/ecommerce/products">Products</Link>
-                </li>
-                <li>
-                  <Link href="/ecommerce/product-detail">Product Detail</Link>
-                </li>
-                <li>
-                  <Link href="/ecommerce/orders">Orders</Link>
-                </li>
-                <li>
-                  <Link href="/ecommerce/customers">Customers</Link>
-                </li>
-                <li>
-                  <Link href="/ecommerce/cart">Cart</Link>
-                </li>
-                <li>
-                  <Link href="/ecommerce/checkout">Checkout</Link>
-                </li>
-                <li>
-                  <Link href="/ecommerce/shops">Shops</Link>
-                </li>
-                <li>
-                  <Link href="/ecommerce/add-product">Add Product</Link>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('email') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('email')
-                }}
-              >
-                <i className="uil-envelope"></i>
-                <span>Email</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('email') ? 'mm-show' : ''}`}>
-                <li>
-                  <Link href="/email/inbox">Inbox</Link>
-                </li>
-                <li>
-                  <Link href="/email/read">Read Email</Link>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('invoices') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('invoices')
-                }}
-              >
-                <i className="uil-invoice"></i>
-                <span>Invoices</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('invoices') ? 'mm-show' : ''}`}>
-                <li>
-                  <Link href="/invoices/list">Invoice List</Link>
-                </li>
-                <li>
-                  <Link href="/invoices/detail">Invoice Detail</Link>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('contacts') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('contacts')
-                }}
-              >
-                <i className="uil-book-alt"></i>
-                <span>Contacts</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('contacts') ? 'mm-show' : ''}`}>
-                <li>
-                  <Link href="/contacts/grid">User Grid</Link>
-                </li>
-                <li>
-                  <Link href="/contacts/list">User List</Link>
-                </li>
-                <li>
-                  <Link href="/contacts/profile">Profile</Link>
-                </li>
-              </ul>
-            </li>
+            {/* Billing Menu */}
+            {(canViewBilling || isAdmin) && (
+              <li>
+                <a
+                  href="javascript: void(0);"
+                  className={`has-arrow waves-effect ${isExpanded('billing') ? 'mm-active' : ''} ${
+                    pathname?.startsWith('/billing') ? 'mm-active' : ''
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    toggleMenu('billing')
+                  }}
+                >
+                  <i className="mdi mdi-currency-usd"></i>
+                  <span>Billing</span>
+                </a>
+                <ul
+                  className={`sub-menu ${
+                    isExpanded('billing') || pathname?.startsWith('/billing') ? 'mm-show' : ''
+                  }`}
+                >
+                  <li>
+                    <Link
+                      href="/billing/dashboard"
+                      className={isActive('/billing/dashboard') ? 'mm-active' : ''}
+                    >
+                      <i className="mdi mdi-view-dashboard"></i>
+                      <span>Dashboard</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/billing/invoices"
+                      className={isActive('/billing/invoices') ? 'mm-active' : ''}
+                    >
+                      <i className="mdi mdi-file-document"></i>
+                      <span>Invoices</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/billing/payments"
+                      className={isActive('/billing/payments') ? 'mm-active' : ''}
+                    >
+                      <i className="mdi mdi-cash-multiple"></i>
+                      <span>Payments</span>
+                    </Link>
+                  </li>
+                  {(canManageBilling || isAdmin) && (
+                    <li>
+                      <Link
+                        href="/billing/rates"
+                        className={isActive('/billing/rates') ? 'mm-active' : ''}
+                      >
+                        <i className="mdi mdi-currency-usd"></i>
+                        <span>Rates</span>
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              </li>
+            )}
 
             <li className="menu-title">Pages</li>
 
@@ -314,20 +269,20 @@ export default function Sidebar() {
             </li>
 
             {/* Access Control Menu - Always show for admins or users with permissions */}
-            {(canViewRoles || canViewPermissions) && (
-              <li>
-                <a
-                  href="javascript: void(0);"
-                  className={`has-arrow waves-effect ${isExpanded('admin') ? 'mm-active' : ''} ${isActive('/roles') || isActive('/permissions') || isActive('/modules') ? 'mm-active' : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault()
+            {(canViewRoles || canViewPermissions || canViewModules || canViewAssessmentQuestions || isAdmin) && (
+            <li>
+              <a
+                href="javascript: void(0);"
+                  className={`has-arrow waves-effect ${isExpanded('admin') ? 'mm-active' : ''} ${isActive('/roles') || isActive('/permissions') || isActive('/modules') || isActive('/admin/assessment-questions') ? 'mm-active' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault()
                     toggleMenu('admin')
                   }}
                 >
                   <i className="uil-shield-check"></i>
                   <span>Access Control</span>
                 </a>
-                <ul className={`sub-menu ${isExpanded('admin') || isActive('/roles') || isActive('/permissions') || isActive('/modules') ? 'mm-show' : ''}`}>
+                <ul className={`sub-menu ${isExpanded('admin') || isActive('/roles') || isActive('/permissions') || isActive('/modules') || isActive('/admin/assessment-questions') ? 'mm-show' : ''}`}>
                   {canViewRoles && (
                     <li>
                       <Link 
@@ -337,7 +292,7 @@ export default function Sidebar() {
                         <i className="uil-shield"></i>
                         <span>Roles</span>
                       </Link>
-                    </li>
+                </li>
                   )}
                   {canViewPermissions && (
                     <li>
@@ -348,7 +303,7 @@ export default function Sidebar() {
                         <i className="uil-key-skeleton"></i>
                         <span>Permissions</span>
                       </Link>
-                    </li>
+                </li>
                   )}
                   {canViewModules && (
                     <li>
@@ -359,352 +314,34 @@ export default function Sidebar() {
                         <i className="uil-folder"></i>
                         <span>Modules</span>
                       </Link>
-                    </li>
+                </li>
                   )}
-                </ul>
-              </li>
+                  {canViewAssessmentQuestions && (
+                    <li>
+                      <Link 
+                        href="/admin/assessment-questions" 
+                        className={isActive('/admin/assessment-questions') ? 'mm-active' : ''}
+                      >
+                        <i className="uil-question-circle"></i>
+                        <span>Assessment Questions</span>
+                      </Link>
+                </li>
+                  )}
+                  {isAdmin && (
+                    <li>
+                      <Link 
+                        href="/admin/pdf-queue" 
+                        className={isActive('/admin/pdf-queue') ? 'mm-active' : ''}
+                      >
+                        <i className="mdi mdi-file-pdf-box"></i>
+                        <span>PDF Queue</span>
+                      </Link>
+                </li>
+                  )}
+              </ul>
+            </li>
             )}
 
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('auth') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('auth')
-                }}
-              >
-                <i className="uil-user-circle"></i>
-                <span>Authentication</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('auth') ? 'mm-show' : ''}`}>
-                <li>
-                  <Link href="/auth/login">Login</Link>
-                </li>
-                <li>
-                  <Link href="/auth/register">Register</Link>
-                </li>
-                <li>
-                  <Link href="/auth/recover-password">Recover Password</Link>
-                </li>
-                <li>
-                  <Link href="/auth/lock-screen">Lock Screen</Link>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('utility') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('utility')
-                }}
-              >
-                <i className="uil-file-alt"></i>
-                <span>Utility</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('utility') ? 'mm-show' : ''}`}>
-                <li>
-                  <Link href="/pages/starter">Starter Page</Link>
-                </li>
-                <li>
-                  <Link href="/pages/maintenance">Maintenance</Link>
-                </li>
-                <li>
-                  <Link href="/pages/coming-soon">Coming Soon</Link>
-                </li>
-                <li>
-                  <Link href="/pages/timeline">Timeline</Link>
-                </li>
-                <li>
-                  <Link href="/pages/faqs">FAQs</Link>
-                </li>
-                <li>
-                  <Link href="/pages/pricing">Pricing</Link>
-                </li>
-                <li>
-                  <Link href="/pages/404">Error 404</Link>
-                </li>
-                <li>
-                  <Link href="/pages/500">Error 500</Link>
-                </li>
-              </ul>
-            </li>
-
-            <li className="menu-title">Components</li>
-
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('ui') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('ui')
-                }}
-              >
-                <i className="uil-flask"></i>
-                <span>UI Elements</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('ui') ? 'mm-show' : ''}`}>
-                <li>
-                  <Link href="/ui/alerts">Alerts</Link>
-                </li>
-                <li>
-                  <Link href="/ui/buttons">Buttons</Link>
-                </li>
-                <li>
-                  <Link href="/ui/cards">Cards</Link>
-                </li>
-                <li>
-                  <Link href="/ui/carousel">Carousel</Link>
-                </li>
-                <li>
-                  <Link href="/ui/dropdowns">Dropdowns</Link>
-                </li>
-                <li>
-                  <Link href="/ui/grid">Grid</Link>
-                </li>
-                <li>
-                  <Link href="/ui/images">Images</Link>
-                </li>
-                <li>
-                  <Link href="/ui/lightbox">Lightbox</Link>
-                </li>
-                <li>
-                  <Link href="/ui/modals">Modals</Link>
-                </li>
-                <li>
-                  <Link href="/ui/offcanvas">Offcanvas</Link>
-                </li>
-                <li>
-                  <Link href="/ui/rangeslider">Range Slider</Link>
-                </li>
-                <li>
-                  <Link href="/ui/session-timeout">Session Timeout</Link>
-                </li>
-                <li>
-                  <Link href="/ui/progressbars">Progress Bars</Link>
-                </li>
-                <li>
-                  <Link href="/ui/placeholders">Placeholders</Link>
-                </li>
-                <li>
-                  <Link href="/ui/sweet-alert">Sweet Alert</Link>
-                </li>
-                <li>
-                  <Link href="/ui/tabs-accordions">Tabs & Accordions</Link>
-                </li>
-                <li>
-                  <Link href="/ui/typography">Typography</Link>
-                </li>
-                <li>
-                  <Link href="/ui/utilities">Utilities</Link>
-                </li>
-                <li>
-                  <Link href="/ui/toasts">Toasts</Link>
-                </li>
-                <li>
-                  <Link href="/ui/video">Video</Link>
-                </li>
-                <li>
-                  <Link href="/ui/general">General</Link>
-                </li>
-                <li>
-                  <Link href="/ui/colors">Colors</Link>
-                </li>
-                <li>
-                  <Link href="/ui/rating">Rating</Link>
-                </li>
-                <li>
-                  <Link href="/ui/notifications">Notifications</Link>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`waves-effect ${isExpanded('forms') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('forms')
-                }}
-              >
-                <i className="uil-shutter-alt"></i>
-                <span className="badge rounded-pill bg-info float-end">9</span>
-                <span>Forms</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('forms') ? 'mm-show' : ''}`}>
-                <li>
-                  <Link href="/forms/elements">Basic Elements</Link>
-                </li>
-                <li>
-                  <Link href="/forms/validation">Validation</Link>
-                </li>
-                <li>
-                  <Link href="/forms/advanced">Advanced Plugins</Link>
-                </li>
-                <li>
-                  <Link href="/forms/editors">Editors</Link>
-                </li>
-                <li>
-                  <Link href="/forms/uploads">File Upload</Link>
-                </li>
-                <li>
-                  <Link href="/forms/xeditable">Xeditable</Link>
-                </li>
-                <li>
-                  <Link href="/forms/repeater">Repeater</Link>
-                </li>
-                <li>
-                  <Link href="/forms/wizard">Wizard</Link>
-                </li>
-                <li>
-                  <Link href="/forms/mask">Mask</Link>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('tables') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('tables')
-                }}
-              >
-                <i className="uil-list-ul"></i>
-                <span>Tables</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('tables') ? 'mm-show' : ''}`}>
-                <li>
-                  <Link href="/tables/basic">Bootstrap Basic</Link>
-                </li>
-                <li>
-                  <Link href="/tables/datatable">Datatables</Link>
-                </li>
-                <li>
-                  <Link href="/tables/responsive">Responsive</Link>
-                </li>
-                <li>
-                  <Link href="/tables/editable">Editable</Link>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('charts') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('charts')
-                }}
-              >
-                <i className="uil-chart"></i>
-                <span>Charts</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('charts') ? 'mm-show' : ''}`}>
-                <li>
-                  <Link href="/charts/apex">Apex</Link>
-                </li>
-                <li>
-                  <Link href="/charts/chartjs">Chartjs</Link>
-                </li>
-                <li>
-                  <Link href="/charts/flot">Flot</Link>
-                </li>
-                <li>
-                  <Link href="/charts/knob">Jquery Knob</Link>
-                </li>
-                <li>
-                  <Link href="/charts/sparkline">Sparkline</Link>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('icons') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('icons')
-                }}
-              >
-                <i className="uil-streering"></i>
-                <span>Icons</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('icons') ? 'mm-show' : ''}`}>
-                <li>
-                  <Link href="/icons/unicons">Unicons</Link>
-                </li>
-                <li>
-                  <Link href="/icons/boxicons">Boxicons</Link>
-                </li>
-                <li>
-                  <Link href="/icons/materialdesign">Material Design</Link>
-                </li>
-                <li>
-                  <Link href="/icons/dripicons">Dripicons</Link>
-                </li>
-                <li>
-                  <Link href="/icons/fontawesome">Font Awesome</Link>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('maps') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('maps')
-                }}
-              >
-                <i className="uil-location-point"></i>
-                <span>Maps</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('maps') ? 'mm-show' : ''}`}>
-                <li>
-                  <Link href="/maps/google">Google</Link>
-                </li>
-                <li>
-                  <Link href="/maps/vector">Vector</Link>
-                </li>
-                <li>
-                  <Link href="/maps/leaflet">Leaflet</Link>
-                </li>
-              </ul>
-            </li>
-
-            <li>
-              <a
-                href="javascript: void(0);"
-                className={`has-arrow waves-effect ${isExpanded('multilevel') ? 'mm-active' : ''}`}
-                onClick={(e) => {
-                  e.preventDefault()
-                  toggleMenu('multilevel')
-                }}
-              >
-                <i className="uil-share-alt"></i>
-                <span>Multi Level</span>
-              </a>
-              <ul className={`sub-menu ${isExpanded('multilevel') ? 'mm-show' : ''}`}>
-                <li>
-                  <a href="javascript: void(0);">Level 1.1</a>
-                </li>
-                <li>
-                  <a href="javascript: void(0);" className="has-arrow">
-                    Level 1.2
-                  </a>
-                </li>
-              </ul>
-            </li>
           </ul>
         </div>
       </div>

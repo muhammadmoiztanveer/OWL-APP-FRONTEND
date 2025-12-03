@@ -6,7 +6,6 @@ import { rolesApi } from '@/lib/api/roles'
 import { permissionsApi } from '@/lib/api/permissions'
 import { Role, Permission, CreateRoleRequest, UpdateRoleRequest, PermissionGroup } from '@/lib/types'
 import { useHasPermission } from '@/hooks/useHasPermission'
-import { useIsAdmin } from '@/hooks/useIsAdmin'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import toast from 'react-hot-toast'
 
@@ -19,11 +18,10 @@ export default function RolesPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set())
-  const isAdmin = useIsAdmin()
-  const canView = useHasPermission('view roles') || isAdmin
-  const canCreate = useHasPermission('create roles') || isAdmin
-  const canEdit = useHasPermission('edit roles') || isAdmin
-  const canDelete = useHasPermission('delete roles') || isAdmin
+  const canView = useHasPermission('view roles')
+  const canCreate = useHasPermission('create roles')
+  const canEdit = useHasPermission('edit roles')
+  const canDelete = useHasPermission('delete roles')
 
   const {
     register,

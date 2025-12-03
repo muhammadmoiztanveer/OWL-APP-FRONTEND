@@ -3,7 +3,7 @@ interface BreadcrumbProps {
   title: string
 }
 
-export default function Breadcrumb({ pagetitle = 'Minible', title }: BreadcrumbProps) {
+export default function Breadcrumb({ pagetitle = 'MENTAL HEALTH ASSESSMENT SYSTEM', title }: BreadcrumbProps) {
   return (
     <div className="row">
       <div className="col-12">

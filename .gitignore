@@ -34,3 +34,29 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Laravel/PHP files (not used in Next.js frontend)
+*.php
+composer.json
+composer.lock
+artisan
+server.php
+phpunit.xml
+/app/Http/
+/app/Console/
+/app/Exceptions/
+/app/Models/
+/app/Providers/
+/bootstrap/
+/config/
+/database/
+/routes/
+/resources/views/
+/resources/lang/
+/resources/js/
+/storage/
+/vendor/
+/public/index.php
+/public/web.config
+/public/mix-manifest.json
+/webpack.mix.js
