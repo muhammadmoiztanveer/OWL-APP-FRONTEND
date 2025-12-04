@@ -618,3 +618,139 @@ export interface UsersListParams {
   sort_order?: 'asc' | 'desc'
 }
 
+// Audit Log Types
+export interface AuditLog {
+  id: number
+  user_id: number | null
+  user: {
+    id: number
+    name: string
+    email: string
+  } | null
+  session_id: string | null
+  ip_address: string | null
+  user_agent: string | null
+  device_type: 'desktop' | 'mobile' | 'tablet' | 'unknown'
+  browser: string | null
+  platform: string | null
+  action: 'create' | 'read' | 'update' | 'delete' | 'login' | 'logout' | 'export'
+  action_label: string
+  resource_type: string | null
+  resource_id: number | null
+  resource_identifier: string | null
+  is_phi_access: boolean
+  http_method: string | null
+  route: string | null
+  endpoint: string | null
+  metadata: Record<string, any> | null
+  description: string | null
+  status: 'success' | 'failed' | 'error'
+  error_message: string | null
+  created_at: string
+}
+
+export interface AuditLogFilters {
+  phi_only?: boolean
+  user_id?: number
+  resource_type?: string
+  resource_id?: number
+  action?: string
+  start_date?: string
+  end_date?: string
+  ip_address?: string
+  status?: string
+  per_page?: number
+  page?: number
+  search?: string
+}
+
+export interface AuditLogStats {
+  total_logs: number
+  phi_access_logs: number
+  by_action: Record<string, number>
+  by_resource_type: Record<string, number>
+  by_status: Record<string, number>
+  top_users: Array<{
+    user_id: number
+    user: {
+      id: number
+      name: string
+      email: string
+    }
+    count: number
+  }>
+}
+
+// Onboarding Types
+export type OnboardingStatusType = 'pending' | 'in_progress' | 'completed'
+
+export interface OnboardingStatus {
+  onboarding_status: OnboardingStatusType
+  steps_completed: Record<string, boolean>
+  completed_at: string | null
+  profile_completed?: boolean
+  profile_completed_at?: string | null
+}
+
+export interface OnboardingStep {
+  key: string
+  label: string
+  completed: boolean
+}
+
+export interface OnboardingStepsResponse {
+  steps: OnboardingStep[]
+  current_step: string | null
+  progress: number
+}
+
+export interface PatientProfile {
+  id: number
+  name: string
+  email: string
+  date_of_birth: string | null
+  phone: string | null
+  // Address
+  street_address: string | null
+  city: string | null
+  state: string | null
+  zip_code: string | null
+  // Demographics
+  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say' | null
+  ethnicity: string | null
+  race: string | null
+  marital_status: 'single' | 'married' | 'divorced' | 'widowed' | 'separated' | 'domestic_partnership' | null
+  preferred_language: string
+  // Emergency Contact
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
+  emergency_contact_relationship: string | null
+  // Insurance
+  insurance_provider: string | null
+  insurance_policy_number: string | null
+  insurance_group_number: string | null
+  // Medical Background
+  medical_history: string | null
+  surgical_history: string | null
+  family_history: string | null
+  current_medications: string | null
+  allergies: string | null
+  primary_care_physician: string | null
+  blood_type: string | null
+  social_history: string | null
+  // Profile completion
+  profile_completed: boolean
+  profile_completed_at: string | null
+}
+
+// Onboarding Request Types
+export interface UpdateOnboardingStepRequest {
+  step: string
+  completed: boolean
+}
+
+export interface UpdateProfileStepRequest {
+  step: 'basic' | 'address' | 'demographics' | 'emergency' | 'insurance' | 'medical'
+  data: Partial<PatientProfile>
+}
+

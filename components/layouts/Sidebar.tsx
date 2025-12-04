@@ -50,9 +50,12 @@ export default function Sidebar() {
       initSimplebar()
     }
     
-    // Auto-expand Access Control menu if on roles, permissions, modules, assessment questions, or PDF queue page
-    if (pathname === '/roles' || pathname === '/permissions' || pathname?.startsWith('/modules') || pathname?.startsWith('/admin/assessment-questions') || pathname?.startsWith('/admin/pdf-queue')) {
+    // Auto-expand Access Control menu if on roles, permissions, modules, assessment questions, PDF queue, or audit logs page
+    if (pathname === '/roles' || pathname === '/permissions' || pathname?.startsWith('/modules') || pathname?.startsWith('/admin/assessment-questions') || pathname?.startsWith('/admin/pdf-queue') || pathname?.startsWith('/admin/audit-logs')) {
       setExpandedMenus((prev) => new Set([...prev, 'admin']))
+      if (pathname?.startsWith('/admin/audit-logs')) {
+        setExpandedMenus((prev) => new Set([...prev, 'audit-logs']))
+      }
     }
   }, [pathname])
 
@@ -273,7 +276,7 @@ export default function Sidebar() {
             <li>
               <a
                 href="javascript: void(0);"
-                  className={`has-arrow waves-effect ${isExpanded('admin') ? 'mm-active' : ''} ${isActive('/roles') || isActive('/permissions') || isActive('/modules') || isActive('/admin/assessment-questions') ? 'mm-active' : ''}`}
+                  className={`has-arrow waves-effect ${isExpanded('admin') ? 'mm-active' : ''} ${isActive('/roles') || isActive('/permissions') || isActive('/modules') || isActive('/admin/assessment-questions') || isActive('/admin/audit-logs') ? 'mm-active' : ''}`}
                 onClick={(e) => {
                   e.preventDefault()
                     toggleMenu('admin')
@@ -282,7 +285,7 @@ export default function Sidebar() {
                   <i className="uil-shield-check"></i>
                   <span>Access Control</span>
                 </a>
-                <ul className={`sub-menu ${isExpanded('admin') || isActive('/roles') || isActive('/permissions') || isActive('/modules') || isActive('/admin/assessment-questions') ? 'mm-show' : ''}`}>
+                <ul className={`sub-menu ${isExpanded('admin') || isActive('/roles') || isActive('/permissions') || isActive('/modules') || isActive('/admin/assessment-questions') || isActive('/admin/audit-logs') ? 'mm-show' : ''}`}>
                   {canViewRoles && (
                     <li>
                       <Link 
@@ -328,15 +331,50 @@ export default function Sidebar() {
                 </li>
                   )}
                   {isAdmin && (
-                    <li>
-                      <Link 
-                        href="/admin/pdf-queue" 
-                        className={isActive('/admin/pdf-queue') ? 'mm-active' : ''}
-                      >
-                        <i className="mdi mdi-file-pdf-box"></i>
-                        <span>PDF Queue</span>
-                      </Link>
-                </li>
+                    <>
+                      <li>
+                        <Link 
+                          href="/admin/pdf-queue" 
+                          className={isActive('/admin/pdf-queue') ? 'mm-active' : ''}
+                        >
+                          <i className="mdi mdi-file-pdf-box"></i>
+                          <span>PDF Queue</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <a
+                          href="javascript: void(0);"
+                          className={`has-arrow waves-effect ${isExpanded('audit-logs') ? 'mm-active' : ''} ${isActive('/admin/audit-logs') ? 'mm-active' : ''}`}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            toggleMenu('audit-logs')
+                          }}
+                        >
+                          <i className="mdi mdi-file-document-multiple"></i>
+                          <span>Audit Logs</span>
+                        </a>
+                        <ul className={`sub-menu ${isExpanded('audit-logs') || isActive('/admin/audit-logs') ? 'mm-show' : ''}`}>
+                          <li>
+                            <Link
+                              href="/admin/audit-logs"
+                              className={isActive('/admin/audit-logs') && !isActive('/admin/audit-logs/stats') && !pathname?.match(/\/admin\/audit-logs\/\d+/) ? 'mm-active' : ''}
+                            >
+                              <i className="mdi mdi-format-list-bulleted"></i>
+                              <span>All Logs</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/admin/audit-logs/stats"
+                              className={isActive('/admin/audit-logs/stats') ? 'mm-active' : ''}
+                            >
+                              <i className="mdi mdi-chart-line"></i>
+                              <span>Statistics</span>
+                            </Link>
+                          </li>
+                        </ul>
+                      </li>
+                    </>
                   )}
               </ul>
             </li>

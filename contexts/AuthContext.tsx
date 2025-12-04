@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { useRouter } from 'next/navigation'
 import { authApi } from '@/lib/api/auth'
 import { usersApi } from '@/lib/api/users'
+import { onboardingApi } from '@/lib/api/onboarding'
 import { User, LoginRequest, RegisterRequest, ApiResponse } from '@/lib/types'
 import { apiClient } from '@/lib/api/client'
 import toast from 'react-hot-toast'
@@ -134,6 +135,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         
         toast.success('Login successful!')
+        
+        // Check onboarding status before redirecting
+        try {
+          const onboardingResponse = await onboardingApi.getStatus()
+          if (onboardingResponse.success && onboardingResponse.data) {
+            if (onboardingResponse.data.onboarding_status !== 'completed') {
+              router.push('/onboarding')
+              return
+            }
+          }
+        } catch (error) {
+          // If onboarding check fails, proceed to dashboard
+          console.error('Failed to check onboarding status:', error)
+        }
+        
         router.push('/dashboard')
       } else {
         throw new Error(response.message || 'Login failed')
@@ -159,7 +175,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('auth_token', token)
         localStorage.setItem('user', JSON.stringify(user))
         toast.success('Registration successful!')
-        router.push('/dashboard')
+        
+        // New users should go through onboarding
+        router.push('/onboarding')
       } else {
         throw new Error(response.message || 'Registration failed')
       }
