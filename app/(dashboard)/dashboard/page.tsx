@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useHasRole } from '@/hooks/useHasRole'
 import { useDashboardStats } from '@/hooks/doctor/useDashboardStats'
+import { useOnboardingGuard } from '@/hooks/onboarding/useOnboardingGuard'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import PermissionGate from '@/components/common/PermissionGate'
 import UnauthorizedMessage from '@/components/common/UnauthorizedMessage'
@@ -31,6 +32,9 @@ export default function DashboardPage() {
   const hasDoctorRole = useHasRole('doctor')
   const isAdmin = useHasRole('admin')
   
+  // Check onboarding status and redirect if incomplete
+  const { isOnboardingComplete, isLoading: onboardingLoading } = useOnboardingGuard()
+  
   // Refresh permissions when page loads (only once on mount)
   useEffect(() => {
     refreshProfile().catch(() => {
@@ -38,6 +42,22 @@ export default function DashboardPage() {
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Empty array - only run once on mount
+  
+  // Show loading while checking onboarding
+  if (onboardingLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    )
+  }
+  
+  // Don't render dashboard if onboarding is incomplete (guard will redirect)
+  if (!isOnboardingComplete) {
+    return null
+  }
 
   // When impersonating, show doctor dashboard
   // Otherwise, show doctor dashboard if user has doctor role (and not admin)
