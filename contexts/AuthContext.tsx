@@ -136,18 +136,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         toast.success('Login successful!')
         
-        // Check onboarding status before redirecting
-        try {
-          const onboardingResponse = await onboardingApi.getStatus()
-          if (onboardingResponse.success && onboardingResponse.data) {
-            if (onboardingResponse.data.onboarding_status !== 'completed') {
-              router.push('/onboarding')
-              return
+        // Check onboarding status before redirecting (only for patients)
+        if (user.account_type === 'patient') {
+          try {
+            const onboardingResponse = await onboardingApi.getStatus()
+            if (onboardingResponse.success && onboardingResponse.data) {
+              if (onboardingResponse.data.onboarding_status !== 'completed') {
+                router.push('/onboarding')
+                return
+              }
             }
+          } catch (error) {
+            // If onboarding check fails, proceed to dashboard
+            console.error('Failed to check onboarding status:', error)
           }
-        } catch (error) {
-          // If onboarding check fails, proceed to dashboard
-          console.error('Failed to check onboarding status:', error)
         }
         
         router.push('/dashboard')

@@ -754,3 +754,147 @@ export interface UpdateProfileStepRequest {
   data: Partial<PatientProfile>
 }
 
+// Billing Types
+export interface Package {
+  id: number
+  name: string
+  slug: string
+  description?: string
+  monthly_price: number
+  yearly_price?: number
+  stripe_price_id?: string
+  stripe_yearly_price_id?: string
+  stripe_product_id?: string
+  features?: string[]
+  max_patients?: number
+  max_assessments_per_month?: number
+  is_active: boolean
+  sort_order: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface Subscription {
+  id: number
+  doctor_id: number
+  package_id?: number
+  package?: Package
+  stripe_subscription_id?: string
+  stripe_customer_id?: string
+  stripe_status?: string
+  stripe_current_period_start?: string
+  stripe_current_period_end?: string
+  billing_cycle: 'monthly' | 'yearly'
+  status: 'active' | 'suspended' | 'cancelled'
+  start_date: string
+  next_billing_date: string
+  cancelled_at?: string
+  cancellation_reason?: string
+  doctor?: { id: number; full_name: string; email: string }
+  created_at?: string
+  updated_at?: string
+}
+
+export interface BillingInvoice {
+  id: number
+  invoice_number: string
+  doctor_id: number
+  subscription_id?: number
+  invoice_type: 'subscription' | 'one_time'
+  subtotal: number
+  tax: number
+  discount: number
+  total: number
+  status: 'pending' | 'paid' | 'overdue' | 'cancelled'
+  due_date: string
+  billing_period_start?: string
+  billing_period_end?: string
+  sent_at?: string
+  email_send_count: number
+  stripe_invoice_id?: string
+  paid_at?: string
+  doctor?: { id: number; full_name: string; email: string }
+  subscription?: Subscription
+  created_at?: string
+  updated_at?: string
+}
+
+export interface StripeSettings {
+  public_key_configured: boolean
+  secret_key_configured: boolean
+  webhook_secret_configured: boolean
+  connection_status: {
+    connected: boolean
+    message: string
+    account_id?: string
+    email?: string
+  }
+}
+
+// Billing Request Types
+export interface CreatePackageRequest {
+  name: string
+  description?: string
+  monthly_price: number
+  yearly_price?: number
+  features?: string[]
+  max_patients?: number
+  max_assessments_per_month?: number
+  is_active?: boolean
+  create_stripe_product?: boolean
+}
+
+export interface UpdatePackageRequest {
+  name?: string
+  description?: string
+  monthly_price?: number
+  yearly_price?: number
+  features?: string[]
+  max_patients?: number
+  max_assessments_per_month?: number
+  is_active?: boolean
+}
+
+export interface CreateSubscriptionRequest {
+  doctor_id: number
+  package_id: number
+  billing_cycle: 'monthly' | 'yearly'
+}
+
+export interface UpdateSubscriptionRequest {
+  package_id?: number
+  billing_cycle?: 'monthly' | 'yearly'
+  status?: 'active' | 'suspended' | 'cancelled'
+}
+
+export interface CancelSubscriptionRequest {
+  reason?: string
+}
+
+// Billing List Params
+export interface PackagesListParams {
+  per_page?: number
+  page?: number
+  active_only?: boolean
+  search?: string
+}
+
+export interface SubscriptionsListParams {
+  per_page?: number
+  page?: number
+  status?: 'active' | 'suspended' | 'cancelled'
+  doctor_id?: number
+  search?: string
+}
+
+export interface InvoicesListParams {
+  per_page?: number
+  page?: number
+  status?: 'pending' | 'paid' | 'overdue' | 'cancelled'
+  start_date?: string
+  end_date?: string
+  invoice_type?: 'subscription' | 'one_time'
+  doctor_id?: number
+  search?: string
+}
+

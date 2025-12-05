@@ -18,6 +18,12 @@ export default function OnboardingPage() {
       return
     }
 
+    // Only patients need onboarding - redirect admins and doctors to dashboard
+    if (!authLoading && user && user.account_type !== 'patient') {
+      router.push('/dashboard')
+      return
+    }
+
     // If onboarding is already completed, redirect to dashboard
     if (!statusLoading && status?.onboarding_status === 'completed') {
       router.push('/dashboard')
@@ -36,8 +42,8 @@ export default function OnboardingPage() {
     )
   }
 
-  // Don't render if redirecting
-  if (!user || status?.onboarding_status === 'completed') {
+  // Don't render if redirecting or if not a patient
+  if (!user || user.account_type !== 'patient' || status?.onboarding_status === 'completed') {
     return null
   }
 

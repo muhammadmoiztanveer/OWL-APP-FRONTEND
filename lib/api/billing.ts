@@ -17,6 +17,17 @@ import {
   PaymentsListParams,
   PaginationMeta,
   PaginationLinks,
+  Package,
+  Subscription,
+  BillingInvoice,
+  StripeSettings,
+  CreatePackageRequest,
+  UpdatePackageRequest,
+  CreateSubscriptionRequest,
+  UpdateSubscriptionRequest,
+  CancelSubscriptionRequest,
+  PackagesListParams,
+  SubscriptionsListParams,
 } from '@/lib/types'
 
 export interface PaginatedResponse<T> {
@@ -143,6 +154,81 @@ export const billingApi = {
 
   markPaymentRefunded: async (id: number): Promise<ApiResponse<Payment>> => {
     const response = await api.post<ApiResponse<Payment>>(`/billing/payments/${id}/mark-refunded`)
+    return response.data
+  },
+
+  // Package Management (Admin Only)
+  getPackages: async (params?: PackagesListParams): Promise<PaginatedResponse<Package>> => {
+    const response = await api.get<PaginatedResponse<Package>>('/billing/packages', { params })
+    return response.data
+  },
+
+  getPackage: async (id: number): Promise<ApiResponse<Package>> => {
+    const response = await api.get<ApiResponse<Package>>(`/billing/packages/${id}`)
+    return response.data
+  },
+
+  createPackage: async (data: CreatePackageRequest): Promise<ApiResponse<Package>> => {
+    const response = await api.post<ApiResponse<Package>>('/billing/packages', data)
+    return response.data
+  },
+
+  updatePackage: async (id: number, data: UpdatePackageRequest): Promise<ApiResponse<Package>> => {
+    const response = await api.put<ApiResponse<Package>>(`/billing/packages/${id}`, data)
+    return response.data
+  },
+
+  deletePackage: async (id: number): Promise<ApiResponse> => {
+    const response = await api.delete<ApiResponse>(`/billing/packages/${id}`)
+    return response.data
+  },
+
+  // Subscription Management
+  getSubscriptions: async (params?: SubscriptionsListParams): Promise<PaginatedResponse<Subscription>> => {
+    const response = await api.get<PaginatedResponse<Subscription>>('/billing/subscriptions', { params })
+    return response.data
+  },
+
+  getCurrentSubscription: async (): Promise<ApiResponse<Subscription>> => {
+    const response = await api.get<ApiResponse<Subscription>>('/billing/subscriptions/current')
+    return response.data
+  },
+
+  getSubscription: async (id: number): Promise<ApiResponse<Subscription>> => {
+    const response = await api.get<ApiResponse<Subscription>>(`/billing/subscriptions/${id}`)
+    return response.data
+  },
+
+  createSubscription: async (data: CreateSubscriptionRequest): Promise<ApiResponse<Subscription>> => {
+    const response = await api.post<ApiResponse<Subscription>>('/billing/subscriptions', data)
+    return response.data
+  },
+
+  updateSubscription: async (id: number, data: UpdateSubscriptionRequest): Promise<ApiResponse<Subscription>> => {
+    const response = await api.put<ApiResponse<Subscription>>(`/billing/subscriptions/${id}`, data)
+    return response.data
+  },
+
+  cancelSubscription: async (id: number, data: CancelSubscriptionRequest): Promise<ApiResponse<Subscription>> => {
+    const response = await api.post<ApiResponse<Subscription>>(`/billing/subscriptions/${id}/cancel`, data)
+    return response.data
+  },
+
+  // Subscription Invoice Management
+  generateMonthlyInvoices: async (): Promise<ApiResponse<{ generated: number; errors: number; message: string }>> => {
+    const response = await api.post<ApiResponse<{ generated: number; errors: number; message: string }>>(
+      '/billing/invoices/generate-monthly'
+    )
+    return response.data
+  },
+
+  sendInvoiceEmail: async (id: number): Promise<ApiResponse<BillingInvoice>> => {
+    const response = await api.post<ApiResponse<BillingInvoice>>(`/billing/invoices/${id}/send-email`)
+    return response.data
+  },
+
+  markInvoiceAsPaidSubscription: async (id: number): Promise<ApiResponse<BillingInvoice>> => {
+    const response = await api.post<ApiResponse<BillingInvoice>>(`/billing/invoices/${id}/mark-paid`)
     return response.data
   },
 }
