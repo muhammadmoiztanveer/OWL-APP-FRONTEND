@@ -5,6 +5,7 @@ import { usePatientAssessment } from '@/hooks/assessments/usePatientAssessments'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import StatusBadge from '@/components/common/StatusBadge'
 import AssessmentPdfSection from '@/components/assessments/AssessmentPdfSection'
+import AssessmentResponses from '@/components/assessments/AssessmentResponses'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useHasRole } from '@/hooks/useHasRole'
 import UnauthorizedMessage from '@/components/common/UnauthorizedMessage'
@@ -270,41 +271,11 @@ export default function AssessmentDetailPage() {
 
               {/* Question Responses */}
               {assessment.responses && assessment.responses.length > 0 && (
-                <div className="mb-4">
-                  <h5 className="mb-3">Your Responses</h5>
-                  <div className="table-responsive">
-                    <table className="table table-bordered">
-                      <thead>
-                        <tr>
-                          <th style={{ width: '60%' }}>Question</th>
-                          <th style={{ width: '20%' }}>Answer</th>
-                          <th style={{ width: '20%' }}>Score</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {assessment.responses.map((response, index) => (
-                          <tr key={response.id || index}>
-                            <td>
-                              {response.question?.text || response.question || `Question ${index + 1}`}
-                            </td>
-                            <td>
-                              {response.answer !== undefined
-                                ? typeof response.answer === 'number'
-                                  ? ['Not at all', 'Several days', 'More than half the days', 'Nearly every day'][
-                                      response.answer
-                                    ] || response.answer
-                                  : response.answer
-                                : 'N/A'}
-                            </td>
-                            <td>
-                              <span className="badge bg-primary">{response.score}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <AssessmentResponses
+                  responses={assessment.responses}
+                  title="Your Responses"
+                  defaultExpanded={true}
+                />
               )}
 
               {/* PDF Section */}

@@ -59,7 +59,7 @@ export default function AuditLogsPage() {
 
   const [currentPage, setCurrentPage] = useState(1)
   const [filters, setFilters] = useState<AuditLogFilters>({
-    per_page: 50,
+    per_page: 15, // Default from backend
     page: 1,
   })
   const [exporting, setExporting] = useState(false)
@@ -76,7 +76,7 @@ export default function AuditLogsPage() {
       ip_address: searchParams.get('ip_address') || undefined,
       status: searchParams.get('status') || undefined,
       search: searchParams.get('search') || undefined,
-      per_page: parseInt(searchParams.get('per_page') || '50'),
+      per_page: parseInt(searchParams.get('per_page') || '15'),
       page: parseInt(searchParams.get('page') || '1'),
     }
 
@@ -112,9 +112,24 @@ export default function AuditLogsPage() {
   }
 
   const clearFilters = () => {
-    setFilters({ per_page: 50, page: 1 })
+    setFilters({ per_page: 15, page: 1 })
     setCurrentPage(1)
     router.push('/admin/audit-logs')
+  }
+
+  const handlePerPageChange = (perPage: number) => {
+    const updatedFilters = { ...filters, per_page: perPage, page: 1 }
+    setFilters(updatedFilters)
+    setCurrentPage(1)
+
+    // Update URL
+    const params = new URLSearchParams()
+    Object.entries(updatedFilters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value.toString())
+      }
+    })
+    router.push(`/admin/audit-logs?${params.toString()}`)
   }
 
   const handleExportCsv = async () => {
@@ -231,7 +246,21 @@ export default function AuditLogsPage() {
                     <div className="card-body">
                       <div className="row g-3">
                         <div className="col-md-2">
-                          <div className="form-check">
+                          <label className="form-label">Records Per Page</label>
+                          <select
+                            className="form-select"
+                            value={filters.per_page || 15}
+                            onChange={(e) => handlePerPageChange(parseInt(e.target.value))}
+                          >
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                          </select>
+                        </div>
+                        <div className="col-md-2">
+                          <div className="form-check mt-4">
                             <input
                               className="form-check-input"
                               type="checkbox"

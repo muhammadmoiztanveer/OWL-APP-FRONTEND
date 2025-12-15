@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useHasRole } from '@/hooks/useHasRole'
 import { useDashboardStats } from '@/hooks/doctor/useDashboardStats'
-import { useOnboardingGuard } from '@/hooks/onboarding/useOnboardingGuard'
 import { useAdminDashboard } from '@/hooks/admin/useAdminDashboard'
 import { useInvoiceStats } from '@/hooks/billing/useInvoices'
 import Breadcrumb from '@/components/common/Breadcrumb'
@@ -32,12 +32,12 @@ const formatDate = (dateString: string | undefined) => {
 }
 
 export default function DashboardPage() {
-  const { user, refreshProfile, impersonatingUser, isImpersonating } = useAuth()
-  const hasDoctorRole = useHasRole('doctor')
+  const router = useRouter()
+  const { user, refreshProfile, impersonatingUser, isImpersonating, loading: authLoading } = useAuth()
   const isAdmin = useHasRole('admin')
   
-  // Check onboarding status and redirect if incomplete (only for patients)
-  const { isOnboardingComplete, isLoading: onboardingLoading } = useOnboardingGuard()
+  // ✅ NEW: Onboarding is now optional - patients can access dashboard without completing onboarding
+  // Removed onboarding guard redirect - patients can always access dashboard
   
   // Refresh permissions when page loads (only once on mount)
   useEffect(() => {
@@ -47,26 +47,24 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Empty array - only run once on mount
   
-  // Show loading while checking onboarding (only for patients)
+  // ✅ NEW: Redirect patients to patient dashboard instead of main dashboard
   const isPatient = user?.account_type === 'patient'
-  if (isPatient && onboardingLoading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (isPatient && !authLoading) {
+      router.push('/patient/dashboard')
+    }
+  }, [isPatient, authLoading, router])
   
-  // Don't render dashboard if onboarding is incomplete (guard will redirect) - skip for non-patients
-  if (isPatient && !isOnboardingComplete) {
+  // Don't render main dashboard for patients (they have their own dashboard)
+  if (isPatient) {
     return null
   }
 
+  // ✅ FIXED: Use account_type instead of roles to determine dashboard
   // When impersonating, show doctor dashboard
-  // Otherwise, show doctor dashboard if user has doctor role (and not admin)
-  const shouldShowDoctorDashboard = isImpersonating || (hasDoctorRole && !isAdmin)
+  // Otherwise, check account_type directly (not roles)
+  const isDoctor = user?.account_type === 'doctor'
+  const shouldShowDoctorDashboard = isImpersonating || (isDoctor && !isAdmin)
 
   // Fetch doctor dashboard stats if showing doctor dashboard
   const { data: doctorDashboardData, isLoading: doctorLoading, error: doctorError } = useDashboardStats()

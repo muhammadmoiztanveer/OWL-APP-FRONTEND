@@ -21,12 +21,11 @@ export default function RegisterPage() {
     setValue,
   } = useForm<RegisterRequest>({
     defaultValues: {
-      account_type: 'patient',
+      account_type: 'doctor',
     },
   })
 
   const password = watch('password')
-  const accountType = watch('account_type')
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
@@ -103,7 +102,7 @@ export default function RegisterPage() {
                     <p className="mb-4 text-white" style={{ opacity: 0.9 }}>
                       Join the{' '}
                       <span className="fw-bold">MENTAL HEALTH ASSESSMENT SYSTEM</span> as a doctor
-                      or patient and start managing assessments in a few clicks.
+                      and start managing assessments in a few clicks.
                     </p>
                     <ul className="list-unstyled small mb-0">
                       <li className="mb-1">
@@ -112,7 +111,7 @@ export default function RegisterPage() {
                       </li>
                       <li className="mb-1">
                         <i className="mdi mdi-check-circle-outline text-success me-1"></i>
-                        Role-based access for doctors & patients
+                        Role-based access for doctors
                       </li>
                       <li>
                         <i className="mdi mdi-check-circle-outline text-success me-1"></i>
@@ -126,7 +125,6 @@ export default function RegisterPage() {
                     </p>
                     <div className="d-flex gap-2 flex-wrap">
                       <span className="badge bg-light text-dark">Doctors</span>
-                      <span className="badge bg-light text-dark">Patients</span>
                       <span className="badge bg-light text-dark">Clinics</span>
           </div>
         </div>
@@ -147,40 +145,10 @@ export default function RegisterPage() {
                       <input
                         type="hidden"
                         {...register('account_type', {
-                          required: 'Please select an account type',
-                          validate: (value) =>
-                            value === 'doctor' || value === 'patient' || 'Invalid account type',
+                          required: 'Account type is required',
+                          validate: (value) => value === 'doctor' || 'Only doctor registration is allowed',
                         })}
                       />
-
-                      <div className="mb-4">
-                        <label className="form-label d-block">I am a</label>
-                        <div className="btn-group w-100" role="group" aria-label="Account type selector">
-                          <button
-                            type="button"
-                            className={`btn btn-outline-primary btn-lg ${
-                              accountType === 'patient' ? 'active' : ''
-                            }`}
-                            onClick={() => setValue('account_type', 'patient', { shouldValidate: true })}
-                          >
-                            Patient
-                          </button>
-                          <button
-                            type="button"
-                            className={`btn btn-outline-primary btn-lg ${
-                              accountType === 'doctor' ? 'active' : ''
-                            }`}
-                            onClick={() => setValue('account_type', 'doctor', { shouldValidate: true })}
-                          >
-                            Doctor
-                          </button>
-                        </div>
-                        {errors.account_type && (
-                          <div className="text-danger mt-2" style={{ fontSize: '0.875rem' }}>
-                            {errors.account_type.message}
-                          </div>
-                        )}
-                      </div>
 
                       <div className="mb-3">
                         <label className="form-label" htmlFor="name">

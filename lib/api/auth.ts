@@ -27,5 +27,15 @@ export const authApi = {
     const response = await api.get<ApiResponse<User>>('/profile')
     return response.data
   },
+
+  registerPatient: async (data: {
+    token: string
+    name: string
+    password: string
+    password_confirmation: string
+  }): Promise<ApiResponse<AuthData>> => {
+    const response = await api.post<ApiResponse<AuthData>>('/register/patient', data)
+    return response.data
+  },
 }
 

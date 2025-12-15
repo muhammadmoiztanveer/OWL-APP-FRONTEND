@@ -298,3 +298,5 @@ export default function SubscriptionInvoiceDetailPage() {
     </PermissionGate>
   )
 }
+
+

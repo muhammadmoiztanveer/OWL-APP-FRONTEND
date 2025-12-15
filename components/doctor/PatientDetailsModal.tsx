@@ -1,7 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import { usePatient } from '@/hooks/doctor/usePatients'
 import StatusBadge from '@/components/common/StatusBadge'
+import PatientAssessmentResults from '@/components/doctor/PatientAssessmentResults'
+import AssignAssessmentModal from '@/components/doctor/AssignAssessmentModal'
 import Link from 'next/link'
 
 interface PatientDetailsModalProps {
@@ -21,6 +24,15 @@ const formatDate = (dateString: string | undefined) => {
 
 export default function PatientDetailsModal({ patientId, onClose }: PatientDetailsModalProps) {
   const { data, isLoading } = usePatient(patientId)
+  const [showAssignModal, setShowAssignModal] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const handleAssessmentAssigned = () => {
+    // Trigger refresh by updating key
+    setRefreshKey((prev) => prev + 1)
+    // The PatientAssessmentResults component will refetch when patientId changes
+    // For now, we'll just close the modal - the parent can refetch if needed
+  }
 
   return (
     <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -64,46 +76,17 @@ export default function PatientDetailsModal({ patientId, onClose }: PatientDetai
                 </div>
 
                 <div>
-                  <h6 className="mb-3">Assessments</h6>
-                  {data.assessments && data.assessments.length > 0 ? (
-                    <div className="table-responsive">
-                      <table className="table table-striped">
-                        <thead>
-                          <tr>
-                            <th>Assessment Type</th>
-                            <th>Score</th>
-                            <th>Status</th>
-                            <th>Completed Date</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {data.assessments.map((assessment) => (
-                            <tr key={assessment.id}>
-                              <td>{assessment.assessment_type}</td>
-                              <td>
-                                <span className="fw-bold">{assessment.score}</span>
-                              </td>
-                              <td>
-                                <StatusBadge status={assessment.status} />
-                              </td>
-                              <td>{formatDate(assessment.completed_on)}</td>
-                              <td>
-                                <Link
-                                  href={`/doctor/assessments/${assessment.id}`}
-                                  className="btn btn-sm btn-primary"
-                                >
-                                  View
-                                </Link>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="text-muted">No assessments found for this patient.</p>
-                  )}
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="mb-0">Assessment Results</h6>
+                    <button
+                      className="btn btn-sm btn-primary"
+                      onClick={() => setShowAssignModal(true)}
+                    >
+                      <i className="mdi mdi-plus me-1"></i>
+                      Assign Assessment
+                    </button>
+                  </div>
+                  <PatientAssessmentResults patientId={patientId} />
                 </div>
               </>
             ) : (
@@ -117,6 +100,15 @@ export default function PatientDetailsModal({ patientId, onClose }: PatientDetai
           </div>
         </div>
       </div>
+
+      {showAssignModal && data?.patient && (
+        <AssignAssessmentModal
+          patientId={patientId}
+          patientName={data.patient.name}
+          onClose={() => setShowAssignModal(false)}
+          onSuccess={handleAssessmentAssigned}
+        />
+      )}
     </div>
   )
 }

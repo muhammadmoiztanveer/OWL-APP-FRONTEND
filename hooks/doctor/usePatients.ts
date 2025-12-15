@@ -69,7 +69,8 @@ export function useCreatePatient() {
       if (!response.success) {
         throw new Error(response.message || 'Failed to create patient')
       }
-      return response.data
+      // ✅ NEW: Response now includes { patient, invitation } - return full data
+      return response.data || response
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] })

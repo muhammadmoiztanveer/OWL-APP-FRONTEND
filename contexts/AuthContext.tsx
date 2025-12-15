@@ -52,6 +52,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authApi.getProfile()
       if (response.success && response.data) {
         const updatedUser = response.data
+        
+        // ✅ CRITICAL: Verify account_type exists and preserve it
+        if (!updatedUser.account_type) {
+          // If account_type is missing from API response, preserve it from current user
+          if (user?.account_type) {
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('Profile response missing account_type, preserving existing:', user.account_type)
+            }
+            // Merge current account_type into updated user
+            const userWithAccountType = { ...updatedUser, account_type: user.account_type }
+            setUser(userWithAccountType)
+            localStorage.setItem('user', JSON.stringify(userWithAccountType))
+            return userWithAccountType
+          } else {
+            // No existing account_type either - this is a critical backend issue
+            if (process.env.NODE_ENV === 'development') {
+              console.error('CRITICAL: Profile response missing account_type and no existing value!', {
+                updatedUser,
+                currentUser: user,
+              })
+            }
+            // Still update user but log warning - backend should be fixed
+            setUser(updatedUser)
+            localStorage.setItem('user', JSON.stringify(updatedUser))
+            return updatedUser
+          }
+        }
+        
         setUser(updatedUser)
         localStorage.setItem('user', JSON.stringify(updatedUser))
         
@@ -60,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('User profile refreshed:', {
             id: updatedUser.id,
             name: updatedUser.name,
-            account_type: updatedUser.account_type,
+            account_type: updatedUser.account_type, // ← Critical field
             roles: updatedUser.roles?.map((r) => ({
               name: r.name,
               permissions: r.permissions?.map((p) => p.name) || [],
@@ -80,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       throw error
     }
-  }, []) // Empty dependency array - handleLogout is stable, no need to include it
+  }, [user]) // Include user in dependencies to access current user
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -90,10 +118,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedUser = localStorage.getItem('user')
 
         if (token && storedUser) {
-          setUser(JSON.parse(storedUser))
-          apiClient.setToken(token)
-          // Refresh profile to get latest data
-          await refreshProfile()
+          const parsedUser = JSON.parse(storedUser)
+          
+          // ✅ Verify account_type exists before setting user
+          if (parsedUser && parsedUser.account_type) {
+            setUser(parsedUser)
+            apiClient.setToken(token)
+            
+            // Log for debugging
+            if (process.env.NODE_ENV === 'development') {
+              console.log('=== AUTH CONTEXT INIT DEBUG ===')
+              console.log('1. Loaded User from Storage:', parsedUser)
+              console.log('2. User Account Type:', parsedUser.account_type)
+            }
+            
+            // Refresh profile to get latest data (but preserve account_type)
+            await refreshProfile()
+          } else {
+            // If account_type missing, fetch from API
+            console.warn('User data missing account_type, fetching from API...')
+            apiClient.setToken(token)
+            await refreshProfile()
+          }
         }
       } catch (error) {
         console.error('Error loading user:', error)
@@ -136,20 +182,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         toast.success('Login successful!')
         
-        // Check onboarding status before redirecting (only for patients)
+        // ✅ NEW: Redirect patients to patient dashboard (onboarding is optional)
         if (user.account_type === 'patient') {
-          try {
-            const onboardingResponse = await onboardingApi.getStatus()
-            if (onboardingResponse.success && onboardingResponse.data) {
-              if (onboardingResponse.data.onboarding_status !== 'completed') {
-                router.push('/onboarding')
-                return
-              }
-            }
-          } catch (error) {
-            // If onboarding check fails, proceed to dashboard
-            console.error('Failed to check onboarding status:', error)
-          }
+          router.push('/patient/dashboard')
+          return
         }
         
         router.push('/dashboard')

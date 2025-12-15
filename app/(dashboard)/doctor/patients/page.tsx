@@ -11,6 +11,8 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/contexts/AuthContext'
 import PatientFormModal from '@/components/doctor/PatientFormModal'
 import PatientDetailsModal from '@/components/doctor/PatientDetailsModal'
+import PatientInvitationForm from '@/components/doctor/PatientInvitationForm'
+import PatientInvitationList from '@/components/doctor/PatientInvitationList'
 import toast from 'react-hot-toast'
 
 const formatDate = (dateString: string | undefined) => {
@@ -30,6 +32,8 @@ export default function PatientsPage() {
   const [editingPatient, setEditingPatient] = useState<number | null>(null)
   const [viewingPatient, setViewingPatient] = useState<number | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
+  const [activeTab, setActiveTab] = useState<'patients' | 'invitations'>('patients')
+  const [refreshInvitations, setRefreshInvitations] = useState(0)
 
   const { hasPermission } = usePermissions()
   const { refreshProfile } = useAuth()
@@ -76,24 +80,54 @@ export default function PatientsPage() {
     <PermissionGate permission="patient.view" fallback={<UnauthorizedMessage />}>
       <Breadcrumb pagetitle="MENTAL HEALTH ASSESSMENT SYSTEM" title="Patients" />
 
-      <div className="row">
+      {/* Tabs Navigation */}
+      <div className="row mb-3">
         <div className="col-12">
-          <div className="card">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                  <h4 className="card-title mb-0">Patients Management</h4>
-                  <p className="text-muted mb-0">Manage your patients and their information.</p>
+          <ul className="nav nav-tabs" role="tablist">
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'patients' ? 'active' : ''}`}
+                onClick={() => setActiveTab('patients')}
+                type="button"
+              >
+                <i className="mdi mdi-account-group me-1"></i>
+                Patients
+              </button>
+            </li>
+            <li className="nav-item" role="presentation">
+              <button
+                className={`nav-link ${activeTab === 'invitations' ? 'active' : ''}`}
+                onClick={() => setActiveTab('invitations')}
+                type="button"
+              >
+                <i className="mdi mdi-email-send me-1"></i>
+                Patient Invitations
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Patients Tab */}
+      {activeTab === 'patients' && (
+        <div className="row">
+          <div className="col-12">
+            <div className="card">
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                  <div>
+                    <h4 className="card-title mb-0">Patients Management</h4>
+                    <p className="text-muted mb-0">Manage your patients and their information.</p>
+                  </div>
+                  <PermissionGate permission="patient.create">
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => setShowCreateModal(true)}
+                    >
+                      <i className="mdi mdi-plus me-2"></i>Add Patient
+                    </button>
+                  </PermissionGate>
                 </div>
-                <PermissionGate permission="patient.create">
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => setShowCreateModal(true)}
-                  >
-                    <i className="mdi mdi-plus me-2"></i>Add Patient
-                  </button>
-                </PermissionGate>
-              </div>
 
               {/* Search */}
               <div className="mb-3">
@@ -190,10 +224,27 @@ export default function PatientsPage() {
                   )}
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Invitations Tab */}
+      {activeTab === 'invitations' && (
+        <div className="row">
+          <div className="col-lg-4">
+            <PatientInvitationForm
+              onSuccess={() => {
+                setRefreshInvitations((prev) => prev + 1)
+              }}
+            />
+          </div>
+          <div className="col-lg-8">
+            <PatientInvitationList refreshTrigger={refreshInvitations} includeUsed={true} />
+          </div>
+        </div>
+      )}
 
       {/* Create/Edit Modal */}
       {showCreateModal && (

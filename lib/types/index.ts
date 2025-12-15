@@ -68,7 +68,14 @@ export interface RegisterRequest {
   email: string
   password: string
   password_confirmation: string
-  account_type: 'doctor' | 'patient'
+  account_type: 'doctor'
+}
+
+export interface PatientRegisterRequest {
+  token: string
+  name: string
+  password: string
+  password_confirmation: string
 }
 
 // Role Request Types
@@ -233,12 +240,25 @@ export interface AssessmentOrder {
   assessment?: Assessment
 }
 
+// Assessment Response (backend format with nested question object)
 export interface AssessmentResponse {
   id?: number
-  question_id?: number
-  answer?: string | number
-  score: number
-  question?: Question
+  assessment_id?: number
+  question_id: number
+  score: number // 0-3
+  question?: {
+    id: number
+    assessment_type: string
+    text: string
+    order_num: number
+    created_at?: string
+    updated_at?: string
+  }
+  // Legacy/flat format support
+  question_text?: string
+  question_order?: number
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Assessment {
@@ -540,6 +560,12 @@ export interface CreatePatientRequest {
   email: string
   date_of_birth?: string
   phone?: string
+  // Insurance Information
+  insurance_provider?: string
+  insurance_policy_number?: string
+  insurance_group_number?: string
+  // Medical History
+  medical_history?: string
   // Optional assessment order fields (sent to backend)
   assessment_type?: string | null // lowercase: 'none', 'phq-9', 'gad-7', 'comprehensive'
   instructions?: string // Combined from assessment_instructions + assessment_notes
@@ -553,10 +579,16 @@ export interface CreatePatientRequest {
 export interface UpdatePatientRequest {
   first_name?: string
   last_name?: string
-  name?: string // Keep for backward compatibility
-  email?: string
   date_of_birth?: string
   phone?: string
+  // Insurance Information
+  insurance_provider?: string
+  insurance_policy_number?: string
+  insurance_group_number?: string
+  // Medical History
+  medical_history?: string
+  name?: string // Keep for backward compatibility
+  email?: string
 }
 
 export interface CreateAssessmentOrderRequest {
