@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { usePatient, useCreatePatient, useUpdatePatient } from '@/hooks/doctor/usePatients'
-import { CreatePatientRequest, Patient } from '@/lib/types'
+import { CreatePatientRequest, UpdatePatientRequest, Patient } from '@/lib/types'
 import toast from 'react-hot-toast'
 
 interface PatientFormModalProps {
@@ -29,6 +29,12 @@ export default function PatientFormModal({ patientId, onClose, onSuccess }: Pati
       first_name: '',
       last_name: '',
       email: '',
+      date_of_birth: '',
+      phone: '',
+      insurance_provider: '',
+      insurance_policy_number: '',
+      insurance_group_number: '',
+      medical_history: '',
       assessment_type: null,
       assessment_instructions: '',
       assessment_notes: '',
@@ -57,6 +63,10 @@ export default function PatientFormModal({ patientId, onClose, onSuccess }: Pati
             ? new Date(patient.date_of_birth).toISOString().split('T')[0]
             : '',
           phone: patient.phone || '',
+          insurance_provider: (patient as any).insurance_provider || '',
+          insurance_policy_number: (patient as any).insurance_policy_number || '',
+          insurance_group_number: (patient as any).insurance_group_number || '',
+          medical_history: (patient as any).medical_history || '',
           assessment_type: null,
           assessment_instructions: '',
           assessment_notes: '',
@@ -68,6 +78,12 @@ export default function PatientFormModal({ patientId, onClose, onSuccess }: Pati
         first_name: '',
         last_name: '',
         email: '',
+        date_of_birth: '',
+        phone: '',
+        insurance_provider: '',
+        insurance_policy_number: '',
+        insurance_group_number: '',
+        medical_history: '',
         assessment_type: null,
         assessment_instructions: '',
         assessment_notes: '',
@@ -82,11 +98,17 @@ export default function PatientFormModal({ patientId, onClose, onSuccess }: Pati
       
       if (isEditing && patientId) {
         // For editing, use name field (assessment order not handled in edit)
-        const updateData = {
+        const updateData: UpdatePatientRequest = {
           name: fullName,
           email: data.email,
           date_of_birth: data.date_of_birth,
           phone: data.phone,
+          // Insurance Information
+          insurance_provider: data.insurance_provider || undefined,
+          insurance_policy_number: data.insurance_policy_number || undefined,
+          insurance_group_number: data.insurance_group_number || undefined,
+          // Medical History
+          medical_history: data.medical_history || undefined,
         }
         await updateMutation.mutateAsync({ id: patientId, data: updateData })
       } else {
@@ -117,12 +139,18 @@ export default function PatientFormModal({ patientId, onClose, onSuccess }: Pati
           .trim() || undefined
         
         // Create payload for backend
-        // Backend expects: name, email, date_of_birth, phone, assessment_type (lowercase), instructions
+        // Backend expects: name, email, date_of_birth, phone, insurance fields, medical_history, assessment_type (lowercase), instructions
         const createPayload: any = {
           name: fullName,
           email: data.email,
           date_of_birth: data.date_of_birth,
           phone: data.phone,
+          // Insurance Information
+          insurance_provider: data.insurance_provider || undefined,
+          insurance_policy_number: data.insurance_policy_number || undefined,
+          insurance_group_number: data.insurance_group_number || undefined,
+          // Medical History
+          medical_history: data.medical_history || undefined,
         }
         
         // Only include assessment_type if it's not null/empty
@@ -143,11 +171,27 @@ export default function PatientFormModal({ patientId, onClose, onSuccess }: Pati
           })
         }
         
-        await createMutation.mutateAsync(createPayload as CreatePatientRequest)
+        const response = await createMutation.mutateAsync(createPayload as CreatePatientRequest)
         
-        // Success message based on whether assessment was ordered
-        if (assessmentType) {
-          toast.success('Patient created and assessment invite sent!')
+        // ✅ NEW: Show success message with login link info
+        // Backend now returns { patient, invitation: { login_url } }
+        // The mutation returns response.data which contains { patient, invitation }
+        const responseData = response as any
+        const invitation = responseData?.invitation
+        
+        if (invitation?.login_url) {
+          toast.success(
+            `Patient created successfully! Login link has been sent to ${data.email}`,
+            {
+              duration: 5000,
+            }
+          )
+          // Log login URL for reference (doctor can copy if needed)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Patient Login URL:', invitation.login_url)
+            console.log('Full Response:', responseData)
+          }
+          // Optionally show login URL in a modal or copy button
         } else {
           toast.success('Patient created successfully!')
         }
@@ -235,6 +279,82 @@ export default function PatientFormModal({ patientId, onClose, onSuccess }: Pati
                   {errors.email && (
                     <div className="invalid-feedback">{errors.email.message}</div>
                   )}
+                </div>
+
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Date of Birth</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      {...register('date_of_birth')}
+                    />
+                  </div>
+
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Phone Number</label>
+                    <input
+                      type="tel"
+                      className="form-control"
+                      placeholder="(123) 456-7890"
+                      {...register('phone')}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Insurance Information Section */}
+              <div className="mb-4">
+                <h6 className="mb-3">Insurance Information</h6>
+                
+                <div className="mb-3">
+                  <label className="form-label">Insurance Provider</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="e.g., Blue Cross Blue Shield, Aetna, etc."
+                    {...register('insurance_provider')}
+                  />
+                </div>
+
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Policy Number</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Policy number"
+                      {...register('insurance_policy_number')}
+                    />
+                  </div>
+
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Group Number</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Group number (if applicable)"
+                      {...register('insurance_group_number')}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Medical History Section */}
+              <div className="mb-4">
+                <h6 className="mb-3">Medical History</h6>
+                
+                <div className="mb-3">
+                  <label className="form-label">Medical History & Background</label>
+                  <textarea
+                    className="form-control"
+                    rows={6}
+                    placeholder="Enter patient's medical history, past conditions, medications, allergies, etc."
+                    {...register('medical_history')}
+                  />
+                  <small className="text-muted">
+                    Include any relevant medical history, past conditions, current medications, allergies, and other important health information.
+                  </small>
                 </div>
               </div>
 

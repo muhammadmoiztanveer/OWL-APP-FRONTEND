@@ -17,8 +17,7 @@ import BasicInformationStep from './steps/BasicInformationStep'
 import AddressStep from './steps/AddressStep'
 import DemographicsStep from './steps/DemographicsStep'
 import EmergencyContactStep from './steps/EmergencyContactStep'
-import InsuranceStep from './steps/InsuranceStep'
-import MedicalBackgroundStep from './steps/MedicalBackgroundStep'
+// Insurance and Medical steps removed - handled by doctors after onboarding
 import DoctorBasicStep from './steps/DoctorBasicStep'
 import DoctorPracticeStep from './steps/DoctorPracticeStep'
 import DoctorAddressStep from './steps/DoctorAddressStep'
@@ -58,7 +57,15 @@ export default function OnboardingWizard() {
   })
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
-  const steps = stepsData?.steps || []
+  // Filter out insurance and medical steps for patients (doctor-driven flow)
+  const allSteps = stepsData?.steps || []
+  const steps = allSteps.filter((step) => {
+    // Remove insurance and medical background steps for patients
+    if (user?.account_type === 'patient') {
+      return step.key !== 'profile_insurance' && step.key !== 'profile_medical'
+    }
+    return true
+  })
   const isPatient = user?.account_type === 'patient'
   const isDoctor = user?.account_type === 'doctor'
 
@@ -163,8 +170,6 @@ export default function OnboardingWizard() {
           | 'address'
           | 'demographics'
           | 'emergency'
-          | 'insurance'
-          | 'medical'
 
         await updateProfileStepMutation.mutateAsync({
           step: profileStep,
@@ -243,9 +248,60 @@ export default function OnboardingWizard() {
   const handleComplete = async () => {
     try {
       await completeOnboardingMutation.mutateAsync()
-      router.push('/dashboard')
+      router.push('/patient/dashboard')
     } catch (error: any) {
       console.error('Failed to complete onboarding:', error)
+    }
+  }
+
+  const handleSkipAll = async () => {
+    try {
+      // Mark onboarding as skipped (optional - backend may handle this)
+      // For now, just redirect to dashboard
+      router.push('/patient/dashboard')
+    } catch (error: any) {
+      console.error('Failed to skip onboarding:', error)
+      // Still redirect even if there's an error
+      router.push('/patient/dashboard')
+    }
+  }
+
+  const handleSkipStep = async () => {
+    const step = steps[currentStepIndex]
+    if (!step) return
+
+    try {
+      // Mark current step as skipped (optional)
+      if (step.key.startsWith('profile_')) {
+        // Skip profile step - just mark as completed without data
+        await updateProfileStepMutation.mutateAsync({
+          step: step.key.replace('profile_', '') as 'basic' | 'address' | 'demographics' | 'emergency',
+          data: {},
+        })
+      } else {
+        // Mark step as complete (skipped)
+        await updateStepMutation.mutateAsync({
+          step: step.key,
+          completed: true,
+        })
+      }
+
+      // Move to next step
+      if (currentStepIndex < steps.length - 1) {
+        setCurrentStepIndex(currentStepIndex + 1)
+        setValidationErrors({})
+      } else {
+        // If last step, redirect to dashboard
+        router.push('/patient/dashboard')
+      }
+    } catch (error: any) {
+      console.error('Failed to skip step:', error)
+      // Continue anyway
+      if (currentStepIndex < steps.length - 1) {
+        setCurrentStepIndex(currentStepIndex + 1)
+      } else {
+        router.push('/patient/dashboard')
+      }
     }
   }
 
@@ -288,14 +344,7 @@ export default function OnboardingWizard() {
         return (
           <EmergencyContactStep data={formData as Partial<PatientProfile>} onChange={setFormData} />
         )
-      case 'profile_insurance':
-        return (
-          <InsuranceStep data={formData as Partial<PatientProfile>} onChange={setFormData} />
-        )
-      case 'profile_medical':
-        return (
-          <MedicalBackgroundStep data={formData as Partial<PatientProfile>} onChange={setFormData} />
-        )
+      // Insurance and medical steps removed - now handled by doctors after onboarding
 
       // Doctor steps
       case 'doctor_basic':
@@ -352,10 +401,15 @@ export default function OnboardingWizard() {
               <div className="card-body p-4">
                 {/* Header */}
                 <div className="onboarding-header text-center mb-4">
-                  <h1 className="mb-2">Complete Your Profile</h1>
+                  <h1 className="mb-2">Complete Your Profile <span className="badge bg-info">Optional</span></h1>
                   <p className="text-muted">
                     Step {currentStepIndex + 1} of {steps.length}
                   </p>
+                  <div className="alert alert-info mt-3 mb-0" role="alert">
+                    <i className="mdi mdi-information-outline me-2"></i>
+                    All information below is optional. Your doctor has already filled in your required information.
+                    You can add additional details or skip this step entirely.
+                  </div>
                 </div>
 
                 {/* Progress Bar */}
@@ -381,57 +435,81 @@ export default function OnboardingWizard() {
                 <div className="step-content-wrapper mb-4">{renderStepContent()}</div>
 
                 {/* Navigation */}
-                <div className="step-navigation d-flex justify-content-between">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={handlePrevious}
-                    disabled={currentStepIndex === 0 || isLoading}
-                  >
-                    Previous
-                  </button>
+                <div className="step-navigation d-flex justify-content-between align-items-center">
+                  <div>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={handlePrevious}
+                      disabled={currentStepIndex === 0 || isLoading}
+                    >
+                      Previous
+                    </button>
+                  </div>
 
-                  {currentStepIndex === steps.length - 1 ? (
+                  <div className="d-flex gap-2">
+                    {/* Skip All Button */}
                     <button
                       type="button"
-                      className="btn btn-primary"
-                      onClick={handleComplete}
+                      className="btn btn-outline-secondary"
+                      onClick={handleSkipAll}
                       disabled={isLoading}
                     >
-                      {isLoading ? (
-                        <>
-                          <span
-                            className="spinner-border spinner-border-sm me-2"
-                            role="status"
-                            aria-hidden="true"
-                          ></span>
-                          Completing...
-                        </>
-                      ) : (
-                        'Complete'
-                      )}
+                      Skip All & Go to Dashboard
                     </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={handleNext}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <span
-                            className="spinner-border spinner-border-sm me-2"
-                            role="status"
-                            aria-hidden="true"
-                          ></span>
-                          Saving...
-                        </>
-                      ) : (
-                        'Next'
-                      )}
-                    </button>
-                  )}
+
+                    {currentStepIndex === steps.length - 1 ? (
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={handleComplete}
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <span
+                              className="spinner-border spinner-border-sm me-2"
+                              role="status"
+                              aria-hidden="true"
+                            ></span>
+                            Completing...
+                          </>
+                        ) : (
+                          'Complete'
+                        )}
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary"
+                          onClick={handleSkipStep}
+                          disabled={isLoading}
+                        >
+                          Skip Step
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          onClick={handleNext}
+                          disabled={isLoading}
+                        >
+                          {isLoading ? (
+                            <>
+                              <span
+                                className="spinner-border spinner-border-sm me-2"
+                                role="status"
+                                aria-hidden="true"
+                              ></span>
+                              Saving...
+                            </>
+                          ) : (
+                            'Next'
+                          )}
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

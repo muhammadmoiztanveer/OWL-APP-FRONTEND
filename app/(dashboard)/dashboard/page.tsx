@@ -1,14 +1,18 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useHasRole } from '@/hooks/useHasRole'
 import { useDashboardStats } from '@/hooks/doctor/useDashboardStats'
-import { useOnboardingGuard } from '@/hooks/onboarding/useOnboardingGuard'
+import { useAdminDashboard } from '@/hooks/admin/useAdminDashboard'
+import { useInvoiceStats } from '@/hooks/billing/useInvoices'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import PermissionGate from '@/components/common/PermissionGate'
 import UnauthorizedMessage from '@/components/common/UnauthorizedMessage'
 import StatusBadge from '@/components/common/StatusBadge'
+import InvoiceStatusBadge from '@/components/common/InvoiceStatusBadge'
+import PaymentStatusBadge from '@/components/common/PaymentStatusBadge'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
@@ -28,12 +32,12 @@ const formatDate = (dateString: string | undefined) => {
 }
 
 export default function DashboardPage() {
-  const { user, refreshProfile, impersonatingUser, isImpersonating } = useAuth()
-  const hasDoctorRole = useHasRole('doctor')
+  const router = useRouter()
+  const { user, refreshProfile, impersonatingUser, isImpersonating, loading: authLoading } = useAuth()
   const isAdmin = useHasRole('admin')
   
-  // Check onboarding status and redirect if incomplete
-  const { isOnboardingComplete, isLoading: onboardingLoading } = useOnboardingGuard()
+  // ✅ NEW: Onboarding is now optional - patients can access dashboard without completing onboarding
+  // Removed onboarding guard redirect - patients can always access dashboard
   
   // Refresh permissions when page loads (only once on mount)
   useEffect(() => {
@@ -43,35 +47,39 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Empty array - only run once on mount
   
-  // Show loading while checking onboarding
-  if (onboardingLoading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    )
-  }
+  // ✅ NEW: Redirect patients to patient dashboard instead of main dashboard
+  const isPatient = user?.account_type === 'patient'
+  useEffect(() => {
+    if (isPatient && !authLoading) {
+      router.push('/patient/dashboard')
+    }
+  }, [isPatient, authLoading, router])
   
-  // Don't render dashboard if onboarding is incomplete (guard will redirect)
-  if (!isOnboardingComplete) {
+  // Don't render main dashboard for patients (they have their own dashboard)
+  if (isPatient) {
     return null
   }
 
+  // ✅ FIXED: Use account_type instead of roles to determine dashboard
   // When impersonating, show doctor dashboard
-  // Otherwise, show doctor dashboard if user has doctor role (and not admin)
-  const shouldShowDoctorDashboard = isImpersonating || (hasDoctorRole && !isAdmin)
+  // Otherwise, check account_type directly (not roles)
+  const isDoctor = user?.account_type === 'doctor'
+  const shouldShowDoctorDashboard = isImpersonating || (isDoctor && !isAdmin)
 
   // Fetch doctor dashboard stats if showing doctor dashboard
   const { data: doctorDashboardData, isLoading: doctorLoading, error: doctorError } = useDashboardStats()
+  
+  // Fetch admin dashboard stats if admin
+  const { data: adminDashboardData, isLoading: adminLoading } = useAdminDashboard()
+  const { data: invoiceStats } = useInvoiceStats()
+
   useEffect(() => {
     // Initialize counterup (vanilla JS version)
     if (typeof window !== 'undefined') {
       const initCounterup = () => {
         const counters = document.querySelectorAll('[data-plugin="counterup"]')
         counters.forEach((counter) => {
-          const target = parseInt(counter.textContent || '0')
+          const target = parseFloat(counter.textContent?.replace(/[^0-9.]/g, '') || '0')
           const duration = 1200
           const increment = target / (duration / 16) // 60fps
           let current = 0
@@ -79,10 +87,20 @@ export default function DashboardPage() {
           const updateCounter = () => {
             current += increment
             if (current < target) {
-              counter.textContent = Math.floor(current).toString()
+              const formatted = counter.textContent?.includes('$')
+                ? `$${Math.floor(current).toLocaleString()}`
+                : counter.textContent?.includes('%')
+                ? `${Math.floor(current)}%`
+                : Math.floor(current).toLocaleString()
+              counter.textContent = formatted
               requestAnimationFrame(updateCounter)
             } else {
-              counter.textContent = target.toString()
+              const formatted = counter.textContent?.includes('$')
+                ? `$${target.toLocaleString()}`
+                : counter.textContent?.includes('%')
+                ? `${Math.floor(target)}%`
+                : Math.floor(target).toLocaleString()
+              counter.textContent = formatted
             }
           }
           updateCounter()
@@ -91,7 +109,15 @@ export default function DashboardPage() {
 
       setTimeout(initCounterup, 500)
     }
-  }, [])
+  }, [adminDashboardData, invoiceStats])
+
+  const formatCurrency = (amount: number | string) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(numAmount)
+  }
 
   // Show doctor dashboard if impersonating or user is a doctor (and not admin)
   if (shouldShowDoctorDashboard) {
@@ -241,42 +267,33 @@ export default function DashboardPage() {
   }
 
   // Show admin/default dashboard for admin users
-  const salesAnalyticsOptions = {
-    chart: {
-      height: 339,
-      type: 'line',
-      toolbar: {
-        show: false,
-      },
-      zoom: {
-        enabled: false,
-      },
-    },
-    stroke: {
-      curve: 'straight',
-      width: 2,
-    },
-    colors: ['#556ee6', '#dfe2e6', '#f1b44c'],
-    series: [
-      {
-        name: 'Income',
-        data: [28, 45, 35, 50, 32, 48, 28],
-      },
-      {
-        name: 'Sales',
-        data: [35, 25, 35, 35, 45, 30, 35],
-      },
-      {
-        name: 'Conversation Ratio',
-        data: [38, 30, 30, 35, 40, 25, 30],
-      },
-    ],
-    xaxis: {
-      categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    },
-    grid: {
-      borderColor: '#f1f1f1',
-    },
+  if (adminLoading) {
+    return (
+      <>
+        <Breadcrumb pagetitle="MENTAL HEALTH ASSESSMENT SYSTEM" title="Dashboard" />
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  const stats = adminDashboardData || {
+    totalUsers: 0,
+    totalDoctors: 0,
+    totalPatients: 0,
+    activeDoctors: 0,
+    frozenDoctors: 0,
+    totalRevenue: 0,
+    pendingInvoices: 0,
+    paidInvoices: 0,
+    overdueInvoices: 0,
+    recentUsers: [],
+    recentDoctors: [],
+    recentInvoices: [],
+    recentPayments: [],
   }
 
   return (
@@ -287,21 +304,19 @@ export default function DashboardPage() {
         <div className="col-md-6 col-xl-3">
           <div className="card">
             <div className="card-body">
-              <div className="float-end mt-2">
-                <div id="total-revenue-chart" data-colors='["--bs-primary"]'></div>
+              <div className="d-flex align-items-center">
+                <div className="flex-grow-1">
+                  <h4 className="mb-0">
+                    {formatCurrency(stats.totalRevenue)}
+                  </h4>
+                  <p className="text-muted mb-0">Total Revenue</p>
+                </div>
+                <div className="avatar-sm">
+                  <div className="avatar-title bg-primary-subtle text-primary rounded-circle fs-18">
+                    <i className="mdi mdi-currency-usd"></i>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h4 className="mb-1 mt-1">
-                  $<span data-plugin="counterup">34,152</span>
-                </h4>
-                <p className="text-muted mb-0">Total Revenue</p>
-              </div>
-              <p className="text-muted mt-3 mb-0">
-                <span className="text-success me-1">
-                  <i className="mdi mdi-arrow-up-bold me-1"></i>2.65%
-                </span>{' '}
-                since last week
-              </p>
             </div>
           </div>
         </div>
@@ -309,21 +324,19 @@ export default function DashboardPage() {
         <div className="col-md-6 col-xl-3">
           <div className="card">
             <div className="card-body">
-              <div className="float-end mt-2">
-                <div id="orders-chart" data-colors='["--bs-success"]'></div>
+              <div className="d-flex align-items-center">
+                <div className="flex-grow-1">
+                  <h4 className="mb-0">
+                    <span data-plugin="counterup">{stats.totalUsers}</span>
+                  </h4>
+                  <p className="text-muted mb-0">Total Users</p>
+                </div>
+                <div className="avatar-sm">
+                  <div className="avatar-title bg-success-subtle text-success rounded-circle fs-18">
+                    <i className="mdi mdi-account-group"></i>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h4 className="mb-1 mt-1">
-                  <span data-plugin="counterup">5,643</span>
-                </h4>
-                <p className="text-muted mb-0">Orders</p>
-              </div>
-              <p className="text-muted mt-3 mb-0">
-                <span className="text-danger me-1">
-                  <i className="mdi mdi-arrow-down-bold me-1"></i>0.82%
-                </span>{' '}
-                since last week
-              </p>
             </div>
           </div>
         </div>
@@ -331,21 +344,19 @@ export default function DashboardPage() {
         <div className="col-md-6 col-xl-3">
           <div className="card">
             <div className="card-body">
-              <div className="float-end mt-2">
-                <div id="customers-chart" data-colors='["--bs-primary"]'></div>
+              <div className="d-flex align-items-center">
+                <div className="flex-grow-1">
+                  <h4 className="mb-0">
+                    <span data-plugin="counterup">{stats.totalDoctors}</span>
+                  </h4>
+                  <p className="text-muted mb-0">Total Doctors</p>
+                </div>
+                <div className="avatar-sm">
+                  <div className="avatar-title bg-info-subtle text-info rounded-circle fs-18">
+                    <i className="mdi mdi-stethoscope"></i>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h4 className="mb-1 mt-1">
-                  <span data-plugin="counterup">45,254</span>
-                </h4>
-                <p className="text-muted mb-0">Customers</p>
-              </div>
-              <p className="text-muted mt-3 mb-0">
-                <span className="text-danger me-1">
-                  <i className="mdi mdi-arrow-down-bold me-1"></i>6.24%
-                </span>{' '}
-                since last week
-              </p>
             </div>
           </div>
         </div>
@@ -353,259 +364,76 @@ export default function DashboardPage() {
         <div className="col-md-6 col-xl-3">
           <div className="card">
             <div className="card-body">
-              <div className="float-end mt-2">
-                <div id="growth-chart" data-colors='["--bs-warning"]'></div>
+              <div className="d-flex align-items-center">
+                <div className="flex-grow-1">
+                  <h4 className="mb-0">
+                    <span data-plugin="counterup">{stats.totalPatients}</span>
+                  </h4>
+                  <p className="text-muted mb-0">Total Patients</p>
+                </div>
+                <div className="avatar-sm">
+                  <div className="avatar-title bg-warning-subtle text-warning rounded-circle fs-18">
+                    <i className="mdi mdi-account-heart"></i>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h4 className="mb-1 mt-1">
-                  + <span data-plugin="counterup">12.58</span>%
-                </h4>
-                <p className="text-muted mb-0">Growth</p>
-              </div>
-              <p className="text-muted mt-3 mb-0">
-                <span className="text-success me-1">
-                  <i className="mdi mdi-arrow-up-bold me-1"></i>10.51%
-                </span>{' '}
-                since last week
-              </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="row">
-        <div className="col-xl-8">
+      <div className="row mt-4">
+        <div className="col-md-4">
           <div className="card">
             <div className="card-body">
-              <div className="float-end">
-                <div className="dropdown">
-                  <a
-                    className="dropdown-toggle text-reset"
-                    href="#"
-                    id="dropdownMenuButton5"
-                    data-bs-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="false"
-                  >
-                    <span className="fw-semibold">Sort By:</span>{' '}
-                    <span className="text-muted">
-                      Yearly<i className="mdi mdi-chevron-down ms-1"></i>
-                    </span>
-                  </a>
-
-                  <div className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton5">
-                    <a className="dropdown-item" href="#">
-                      Monthly
-                    </a>
-                    <a className="dropdown-item" href="#">
-                      Yearly
-                    </a>
-                    <a className="dropdown-item" href="#">
-                      Weekly
-                    </a>
+              <div className="d-flex align-items-center">
+                <div className="flex-grow-1">
+                  <h4 className="mb-0">
+                    <span data-plugin="counterup">{stats.pendingInvoices}</span>
+                  </h4>
+                  <p className="text-muted mb-0">Pending Invoices</p>
+                </div>
+                <div className="avatar-sm">
+                  <div className="avatar-title bg-warning-subtle text-warning rounded-circle fs-18">
+                    <i className="mdi mdi-file-document-clock"></i>
                   </div>
                 </div>
-              </div>
-              <h4 className="card-title mb-4">Sales Analytics</h4>
-
-              <div className="mt-1">
-                <ul className="list-inline main-chart mb-0">
-                  <li className="list-inline-item chart-border-left me-0 border-0">
-                    <h3 className="text-primary">
-                      $<span data-plugin="counterup">2,371</span>
-                      <span className="text-muted d-inline-block font-size-15 ms-3">Income</span>
-                    </h3>
-                  </li>
-                  <li className="list-inline-item chart-border-left me-0">
-                    <h3>
-                      <span data-plugin="counterup">258</span>
-                      <span className="text-muted d-inline-block font-size-15 ms-3">Sales</span>
-                    </h3>
-                  </li>
-                  <li className="list-inline-item chart-border-left me-0">
-                    <h3>
-                      <span data-plugin="counterup">3.6</span>%
-                      <span className="text-muted d-inline-block font-size-15 ms-3">
-                        Conversation Ratio
-                      </span>
-                    </h3>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="mt-3">
-                <Chart
-                  options={salesAnalyticsOptions}
-                  series={salesAnalyticsOptions.series}
-                  type="line"
-                  height={339}
-                />
               </div>
             </div>
           </div>
         </div>
-
-        <div className="col-xl-4">
-          <div className="card bg-primary">
+        <div className="col-md-4">
+          <div className="card">
             <div className="card-body">
-              <div className="row align-items-center">
-                <div className="col-sm-8">
-                  <p className="text-white font-size-18">
-                    Enhance your <b>Campaign</b> for better outreach{' '}
-                    <i className="mdi mdi-arrow-right"></i>
-                  </p>
-                  <div className="mt-4">
-                    <a href="javascript: void(0);" className="btn btn-success waves-effect waves-light">
-                      Upgrade Account!
-                    </a>
-                  </div>
+              <div className="d-flex align-items-center">
+                <div className="flex-grow-1">
+                  <h4 className="mb-0">
+                    <span data-plugin="counterup">{stats.paidInvoices}</span>
+                  </h4>
+                  <p className="text-muted mb-0">Paid Invoices</p>
                 </div>
-                <div className="col-sm-4">
-                  <div className="mt-4 mt-sm-0">
-                    <Image
-                      src="/assets/images/setup-analytics-amico.svg"
-                      className="img-fluid"
-                      alt=""
-                      width={200}
-                      height={200}
-                    />
+                <div className="avatar-sm">
+                  <div className="avatar-title bg-success-subtle text-success rounded-circle fs-18">
+                    <i className="mdi mdi-file-document-check"></i>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
+        </div>
+        <div className="col-md-4">
           <div className="card">
             <div className="card-body">
-              <div className="float-end">
-                <div className="dropdown">
-                  <a
-                    className="dropdown-toggle text-reset"
-                    href="#"
-                    id="dropdownMenuButton1"
-                    data-bs-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="false"
-                  >
-                    <span className="fw-semibold">Sort By:</span>{' '}
-                    <span className="text-muted">
-                      Yearly<i className="mdi mdi-chevron-down ms-1"></i>
-                    </span>
-                  </a>
-
-                  <div className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
-                    <a className="dropdown-item" href="#">
-                      Monthly
-                    </a>
-                    <a className="dropdown-item" href="#">
-                      Yearly
-                    </a>
-                    <a className="dropdown-item" href="#">
-                      Weekly
-                    </a>
-                  </div>
+              <div className="d-flex align-items-center">
+                <div className="flex-grow-1">
+                  <h4 className="mb-0">
+                    <span data-plugin="counterup">{stats.overdueInvoices}</span>
+                  </h4>
+                  <p className="text-muted mb-0">Overdue Invoices</p>
                 </div>
-              </div>
-
-              <h4 className="card-title mb-4">Top Selling Products</h4>
-
-              <div className="row align-items-center g-0 mt-3">
-                <div className="col-sm-3">
-                  <p className="text-truncate mt-1 mb-0">
-                    <i className="mdi mdi-circle-medium text-primary me-2"></i> Desktops{' '}
-                  </p>
-                </div>
-
-                <div className="col-sm-9">
-                  <div className="progress mt-1" style={{ height: '6px' }}>
-                    <div
-                      className="progress-bar progress-bar bg-primary"
-                      role="progressbar"
-                      style={{ width: '52%' }}
-                      aria-valuenow={52}
-                      aria-valuemin={0}
-                      aria-valuemax={52}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="row align-items-center g-0 mt-3">
-                <div className="col-sm-3">
-                  <p className="text-truncate mt-1 mb-0">
-                    <i className="mdi mdi-circle-medium text-info me-2"></i> iPhones{' '}
-                  </p>
-                </div>
-                <div className="col-sm-9">
-                  <div className="progress mt-1" style={{ height: '6px' }}>
-                    <div
-                      className="progress-bar progress-bar bg-info"
-                      role="progressbar"
-                      style={{ width: '45%' }}
-                      aria-valuenow={45}
-                      aria-valuemin={0}
-                      aria-valuemax={45}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="row align-items-center g-0 mt-3">
-                <div className="col-sm-3">
-                  <p className="text-truncate mt-1 mb-0">
-                    <i className="mdi mdi-circle-medium text-success me-2"></i> Android{' '}
-                  </p>
-                </div>
-                <div className="col-sm-9">
-                  <div className="progress mt-1" style={{ height: '6px' }}>
-                    <div
-                      className="progress-bar progress-bar bg-success"
-                      role="progressbar"
-                      style={{ width: '48%' }}
-                      aria-valuenow={48}
-                      aria-valuemin={0}
-                      aria-valuemax={48}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="row align-items-center g-0 mt-3">
-                <div className="col-sm-3">
-                  <p className="text-truncate mt-1 mb-0">
-                    <i className="mdi mdi-circle-medium text-warning me-2"></i> Tablets{' '}
-                  </p>
-                </div>
-                <div className="col-sm-9">
-                  <div className="progress mt-1" style={{ height: '6px' }}>
-                    <div
-                      className="progress-bar progress-bar bg-warning"
-                      role="progressbar"
-                      style={{ width: '78%' }}
-                      aria-valuenow={78}
-                      aria-valuemin={0}
-                      aria-valuemax={78}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="row align-items-center g-0 mt-3">
-                <div className="col-sm-3">
-                  <p className="text-truncate mt-1 mb-0">
-                    <i className="mdi mdi-circle-medium text-purple me-2"></i> Cables{' '}
-                  </p>
-                </div>
-                <div className="col-sm-9">
-                  <div className="progress mt-1" style={{ height: '6px' }}>
-                    <div
-                      className="progress-bar progress-bar bg-purple"
-                      role="progressbar"
-                      style={{ width: '63%' }}
-                      aria-valuenow={63}
-                      aria-valuemin={0}
-                      aria-valuemax={63}
-                    ></div>
+                <div className="avatar-sm">
+                  <div className="avatar-title bg-danger-subtle text-danger rounded-circle fs-18">
+                    <i className="mdi mdi-file-document-alert"></i>
                   </div>
                 </div>
               </div>
@@ -615,268 +443,192 @@ export default function DashboardPage() {
       </div>
 
       <div className="row">
-        <div className="col-xl-4">
+        <div className="col-xl-6">
           <div className="card">
             <div className="card-body">
-              <div className="float-end">
-                <div className="dropdown">
-                  <a
-                    className=" dropdown-toggle"
-                    href="#"
-                    id="dropdownMenuButton2"
-                    data-bs-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="false"
-                  >
-                    <span className="text-muted">
-                      All Members<i className="mdi mdi-chevron-down ms-1"></i>
-                    </span>
-                  </a>
-
-                  <div className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton2">
-                    <a className="dropdown-item" href="#">
-                      Locations
-                    </a>
-                    <a className="dropdown-item" href="#">
-                      Revenue
-                    </a>
-                    <a className="dropdown-item" href="#">
-                      Join Date
-                    </a>
-                  </div>
-                </div>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h4 className="card-title mb-0">Recent Users</h4>
+                <Link href="/users" className="btn btn-sm btn-primary">
+                  View All
+                </Link>
               </div>
-              <h4 className="card-title mb-4">Top Users</h4>
-
-              <div data-simplebar style={{ maxHeight: '339px' }}>
+              {stats.recentUsers && stats.recentUsers.length > 0 ? (
                 <div className="table-responsive">
-                  <table className="table table-borderless table-centered table-nowrap">
+                  <table className="table table-nowrap align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Type</th>
+                        <th>Joined</th>
+                      </tr>
+                    </thead>
                     <tbody>
-                      {[
-                        { name: 'Glenn Holden', location: 'Nevada', status: 'Cancel', amount: '$250.00', avatar: 'avatar-4.jpg' },
-                        { name: 'Lolita Hamill', location: 'Texas', status: 'Success', amount: '$110.00', avatar: 'avatar-5.jpg' },
-                        { name: 'Robert Mercer', location: 'California', status: 'Active', amount: '$420.00', avatar: 'avatar-6.jpg' },
-                        { name: 'Marie Kim', location: 'Montana', status: 'Pending', amount: '$120.00', avatar: 'avatar-7.jpg' },
-                        { name: 'Sonya Henshaw', location: 'Colorado', status: 'Active', amount: '$112.00', avatar: 'avatar-8.jpg' },
-                        { name: 'Marie Kim', location: 'Australia', status: 'Success', amount: '$120.00', avatar: 'avatar-2.jpg' },
-                        { name: 'Sonya Henshaw', location: 'India', status: 'Cancel', amount: '$112.00', avatar: 'avatar-1.jpg' },
-                      ].map((user, idx) => (
-                        <tr key={idx}>
-                          <td style={{ width: '20px' }}>
-                            <Image
-                              src={`/assets/images/users/${user.avatar}`}
-                              className="avatar-xs rounded-circle"
-                              alt="..."
-                              width={32}
-                              height={32}
-                            />
-                          </td>
+                      {stats.recentUsers.map((user) => (
+                        <tr key={user.id}>
+                          <td>{user.name}</td>
+                          <td>{user.email}</td>
                           <td>
-                            <h6 className="font-size-15 mb-1 fw-normal">{user.name}</h6>
-                            <p className="text-muted font-size-13 mb-0">
-                              <i className="mdi mdi-map-marker"></i> {user.location}
-                            </p>
-                          </td>
-                          <td>
-                            <span
-                              className={`badge ${
-                                user.status === 'Success'
-                                  ? 'bg-success-subtle text-success'
-                                  : user.status === 'Active'
-                                  ? 'bg-info-subtle text-info'
-                                  : user.status === 'Pending'
-                                  ? 'bg-warning-subtle text-warning'
-                                  : 'bg-danger-subtle text-danger'
-                              } font-size-12`}
-                            >
-                              {user.status}
+                            <span className="badge bg-info-subtle text-info text-capitalize">
+                              {user.account_type}
                             </span>
                           </td>
-                          <td className="text-muted fw-semibold text-end">
-                            <i className="icon-xs icon me-2 text-success" data-feather="trending-up"></i>
-                            {user.amount}
-                          </td>
+                          <td>{formatDate(user.created_at)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted mb-0">No recent users</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="col-xl-4">
+        <div className="col-xl-6">
           <div className="card">
             <div className="card-body">
-              <div className="float-end">
-                <div className="dropdown">
-                  <a
-                    className="dropdown-toggle"
-                    href="#"
-                    id="dropdownMenuButton3"
-                    data-bs-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="false"
-                  >
-                    <span className="text-muted">
-                      Recent<i className="mdi mdi-chevron-down ms-1"></i>
-                    </span>
-                  </a>
-
-                  <div className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton3">
-                    <a className="dropdown-item" href="#">
-                      Recent
-                    </a>
-                    <a className="dropdown-item" href="#">
-                      By Users
-                    </a>
-                  </div>
-                </div>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h4 className="card-title mb-0">Recent Doctors</h4>
+                <Link href="/doctors" className="btn btn-sm btn-primary">
+                  View All
+                </Link>
               </div>
+              {stats.recentDoctors && stats.recentDoctors.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-nowrap align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.recentDoctors.map((doctor) => (
+                        <tr key={doctor.id}>
+                          <td>{`${doctor.first_name} ${doctor.last_name}`}</td>
+                          <td>{doctor.email}</td>
+                          <td>
+                            {doctor.is_frozen ? (
+                              <span className="badge bg-danger-subtle text-danger">Frozen</span>
+                            ) : (
+                              <span className="badge bg-success-subtle text-success">Active</span>
+                            )}
+                          </td>
+                          <td>{formatDate(doctor.created_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted mb-0">No recent doctors</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-              <h4 className="card-title mb-4">Recent Activity</h4>
-
-              <ol className="activity-feed mb-0 ps-2" data-simplebar style={{ maxHeight: '339px' }}>
-                <li className="feed-item">
-                  <div className="feed-item-list">
-                    <p className="text-muted mb-1 font-size-13">
-                      Today<small className="d-inline-block ms-1">12:20 pm</small>
-                    </p>
-                    <p className="mb-0">
-                      Andrei Coman magna sed porta finibus, risus posted a new article:{' '}
-                      <span className="text-primary">Forget UX Rowland</span>
-                    </p>
-                  </div>
-                </li>
-                <li className="feed-item">
-                  <p className="text-muted mb-1 font-size-13">
-                    22 Jul, 2020 <small className="d-inline-block ms-1">12:36 pm</small>
-                  </p>
-                  <p className="mb-0">
-                    Andrei Coman posted a new article:{' '}
-                    <span className="text-primary">Designer Alex</span>
-                  </p>
-                </li>
-                <li className="feed-item">
-                  <p className="text-muted mb-1 font-size-13">
-                    18 Jul, 2020 <small className="d-inline-block ms-1">07:56 am</small>
-                  </p>
-                  <p className="mb-0">
-                    Zack Wetass, sed porta finibus, risus Chris Wallace Commented{' '}
-                    <span className="text-primary"> Developer Moreno</span>
-                  </p>
-                </li>
-                <li className="feed-item">
-                  <p className="text-muted mb-1 font-size-13">
-                    10 Jul, 2020 <small className="d-inline-block ms-1">08:42 pm</small>
-                  </p>
-                  <p className="mb-0">
-                    Zack Wetass, Chris combined Commented <span className="text-primary">UX Murphy</span>
-                  </p>
-                </li>
-
-                <li className="feed-item">
-                  <p className="text-muted mb-1 font-size-13">
-                    23 Jun, 2020 <small className="d-inline-block ms-1">12:22 am</small>
-                  </p>
-                  <p className="mb-0">
-                    Zack Wetass, sed porta finibus, risus Chris Wallace Commented{' '}
-                    <span className="text-primary"> Developer Moreno</span>
-                  </p>
-                </li>
-                <li className="feed-item pb-1">
-                  <p className="text-muted mb-1 font-size-13">
-                    20 Jun, 2020 <small className="d-inline-block ms-1">09:48 pm</small>
-                  </p>
-                  <p className="mb-0">
-                    Zack Wetass, Chris combined Commented <span className="text-primary">UX Murphy</span>
-                  </p>
-                </li>
-              </ol>
+      <div className="row">
+        <div className="col-xl-6">
+          <div className="card">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h4 className="card-title mb-0">Recent Invoices</h4>
+                <Link href="/billing/invoices" className="btn btn-sm btn-primary">
+                  View All
+                </Link>
+              </div>
+              {stats.recentInvoices && stats.recentInvoices.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-nowrap align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Invoice #</th>
+                        <th>Doctor</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Due Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.recentInvoices.map((invoice) => (
+                        <tr key={invoice.id}>
+                          <td>
+                            <Link href={`/billing/invoices/${invoice.id}`} className="text-body fw-bold">
+                              {invoice.invoice_number}
+                            </Link>
+                          </td>
+                          <td>{invoice.doctor_name}</td>
+                          <td>{formatCurrency(parseFloat(invoice.total))}</td>
+                          <td>
+                            <InvoiceStatusBadge status={invoice.status as any} />
+                          </td>
+                          <td>{formatDate(invoice.due_date)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted mb-0">No recent invoices</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="col-xl-4">
+        <div className="col-xl-6">
           <div className="card">
             <div className="card-body">
-              <div className="float-end">
-                <div className="dropdown">
-                  <a
-                    className="dropdown-toggle"
-                    href="#"
-                    id="dropdownMenuButton4"
-                    data-bs-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="false"
-                  >
-                    <span className="text-muted">
-                      Monthly<i className="mdi mdi-chevron-down ms-1"></i>
-                    </span>
-                  </a>
-
-                  <div className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton4">
-                    <a className="dropdown-item" href="#">
-                      Yearly
-                    </a>
-                    <a className="dropdown-item" href="#">
-                      Monthly
-                    </a>
-                    <a className="dropdown-item" href="#">
-                      Weekly
-                    </a>
-                  </div>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h4 className="card-title mb-0">Recent Payments</h4>
+                <Link href="/billing/payments" className="btn btn-sm btn-primary">
+                  View All
+                </Link>
+              </div>
+              {stats.recentPayments && stats.recentPayments.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-nowrap align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Invoice #</th>
+                        <th>Doctor</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.recentPayments.map((payment) => (
+                        <tr key={payment.id}>
+                          <td>{payment.invoice_number}</td>
+                          <td>{payment.doctor_name}</td>
+                          <td>{formatCurrency(parseFloat(payment.amount))}</td>
+                          <td className="text-capitalize">{payment.payment_method}</td>
+                          <td>
+                            <PaymentStatusBadge status={payment.status as any} />
+                          </td>
+                          <td>{formatDate(payment.paid_at)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              </div>
-
-              <h4 className="card-title">Social Source</h4>
-
-              <div className="text-center">
-                <div className="avatar-sm mx-auto mb-4">
-                  <span className="avatar-title rounded-circle bg-primary-subtle font-size-24">
-                    <i className="mdi mdi-facebook text-primary"></i>
-                  </span>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted mb-0">No recent payments</p>
                 </div>
-                <p className="font-16 text-muted mb-2"></p>
-                <h5>
-                  <a href="#" className="text-reset">
-                    Facebook - <span className="text-muted font-16">125 sales</span>{' '}
-                  </a>
-                </h5>
-                <p className="text-muted">
-                  Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis
-                  faucibus tincidunt.
-                </p>
-                <a href="#" className="text-reset font-16">
-                  Learn more <i className="mdi mdi-chevron-right"></i>
-                </a>
-              </div>
-              <div className="row mt-4">
-                {[
-                  { name: 'Facebook', icon: 'mdi-facebook', color: 'primary', sales: '125' },
-                  { name: 'Twitter', icon: 'mdi-twitter', color: 'info', sales: '112' },
-                  { name: 'Instagram', icon: 'mdi-instagram', color: 'pink', sales: '104' },
-                ].map((social, idx) => (
-                  <div key={idx} className="col-4">
-                    <div className="social-source text-center mt-3">
-                      <div className="avatar-xs mx-auto mb-3">
-                        <span className={`avatar-title rounded-circle bg-${social.color} font-size-16`}>
-                          <i className={`mdi ${social.icon} text-white`}></i>
-                        </span>
-                      </div>
-                      <h5 className="font-size-15">{social.name}</h5>
-                      <p className="text-muted mb-0">{social.sales} sales</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-3 text-center">
-                <a href="#" className="text-primary font-size-14 fw-medium">
-                  View All Sources <i className="mdi mdi-chevron-right"></i>
-                </a>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -886,87 +638,46 @@ export default function DashboardPage() {
         <div className="col-lg-12">
           <div className="card">
             <div className="card-body">
-              <h4 className="card-title mb-4">Latest Transaction</h4>
-              <div className="table-responsive">
-                <table className="table table-centered table-nowrap mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th style={{ width: '20px' }}>
-                        <div className="form-check font-size-16">
-                          <input type="checkbox" className="form-check-input" id="customCheck1" />
-                          <label className="form-check-label" htmlFor="customCheck1">
-                            &nbsp;
-                          </label>
-                        </div>
-                      </th>
-                      <th>Order ID</th>
-                      <th>Billing Name</th>
-                      <th>Date</th>
-                      <th>Total</th>
-                      <th>Payment Status</th>
-                      <th>Payment Method</th>
-                      <th>View Details</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { id: '#MB2540', name: 'Neal Matthews', date: '07 Oct, 2019', total: '$400', status: 'Paid', method: 'Mastercard' },
-                      { id: '#MB2541', name: 'Jamal Burnett', date: '07 Oct, 2019', total: '$380', status: 'Chargeback', method: 'Visa' },
-                      { id: '#MB2542', name: 'Juan Mitchell', date: '06 Oct, 2019', total: '$384', status: 'Paid', method: 'Paypal' },
-                      { id: '#MB2543', name: 'Barry Dick', date: '05 Oct, 2019', total: '$412', status: 'Paid', method: 'Mastercard' },
-                      { id: '#MB2544', name: 'Ronald Taylor', date: '04 Oct, 2019', total: '$404', status: 'Refund', method: 'Visa' },
-                      { id: '#MB2545', name: 'Jacob Hunter', date: '04 Oct, 2019', total: '$392', status: 'Paid', method: 'Paypal' },
-                    ].map((order, idx) => (
-                      <tr key={idx}>
-                        <td>
-                          <div className="form-check font-size-16">
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              id={`customCheck${idx + 2}`}
-                            />
-                            <label className="form-check-label" htmlFor={`customCheck${idx + 2}`}>
-                              &nbsp;
-                            </label>
-                          </div>
-                        </td>
-                        <td>
-                          <a href="javascript: void(0);" className="text-body fw-bold">
-                            {order.id}
-                          </a>{' '}
-                        </td>
-                        <td>{order.name}</td>
-                        <td>{order.date}</td>
-                        <td>{order.total}</td>
-                        <td>
-                          <span
-                            className={`badge rounded-pill ${
-                              order.status === 'Paid'
-                                ? 'bg-success-subtle text-success'
-                                : order.status === 'Refund'
-                                ? 'bg-warning-subtle text-warning'
-                                : 'bg-danger-subtle text-danger'
-                            } font-size-12`}
-                          >
-                            {order.status}
-                          </span>
-                        </td>
-                        <td>
-                          <i className={`fab fa-cc-${order.method.toLowerCase()} me-1`}></i>{' '}
-                          {order.method}
-                        </td>
-                        <td>
-                          <button
-                            type="button"
-                            className="btn btn-primary btn-sm btn-rounded waves-effect waves-light"
-                          >
-                            View Details
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h4 className="card-title mb-0">Quick Actions</h4>
+              </div>
+              <div className="row">
+                <div className="col-md-3 mb-3">
+                  <Link href="/users" className="card text-decoration-none h-100">
+                    <div className="card-body text-center d-flex flex-column">
+                      <i className="mdi mdi-account-group text-primary mb-3" style={{ fontSize: '48px' }}></i>
+                      <h5 className="mb-2">Manage Users</h5>
+                      <p className="text-muted mb-0">View and manage all users</p>
+                    </div>
+                  </Link>
+                </div>
+                <div className="col-md-3 mb-3">
+                  <Link href="/doctors" className="card text-decoration-none h-100">
+                    <div className="card-body text-center d-flex flex-column">
+                      <i className="mdi mdi-stethoscope text-info mb-3" style={{ fontSize: '48px' }}></i>
+                      <h5 className="mb-2">Manage Doctors</h5>
+                      <p className="text-muted mb-0">View and manage doctors</p>
+                    </div>
+                  </Link>
+                </div>
+                <div className="col-md-3 mb-3">
+                  <Link href="/billing/invoices" className="card text-decoration-none h-100">
+                    <div className="card-body text-center d-flex flex-column">
+                      <i className="mdi mdi-file-document text-success mb-3" style={{ fontSize: '48px' }}></i>
+                      <h5 className="mb-2">View Invoices</h5>
+                      <p className="text-muted mb-0">Manage billing invoices</p>
+                    </div>
+                  </Link>
+                </div>
+                <div className="col-md-3 mb-3">
+                  <Link href="/billing/payments" className="card text-decoration-none h-100">
+                    <div className="card-body text-center d-flex flex-column">
+                      <i className="mdi mdi-cash-multiple text-warning mb-3" style={{ fontSize: '48px' }}></i>
+                      <h5 className="mb-2">View Payments</h5>
+                      <p className="text-muted mb-0">Track all payments</p>
+                    </div>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

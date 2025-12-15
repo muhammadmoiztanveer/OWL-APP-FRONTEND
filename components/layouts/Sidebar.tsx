@@ -50,12 +50,17 @@ export default function Sidebar() {
       initSimplebar()
     }
     
-    // Auto-expand Access Control menu if on roles, permissions, modules, assessment questions, PDF queue, or audit logs page
-    if (pathname === '/roles' || pathname === '/permissions' || pathname?.startsWith('/modules') || pathname?.startsWith('/admin/assessment-questions') || pathname?.startsWith('/admin/pdf-queue') || pathname?.startsWith('/admin/audit-logs')) {
+    // Auto-expand Access Control menu if on roles, permissions, modules, assessment questions, PDF queue, settings, or audit logs page
+    if (pathname === '/roles' || pathname === '/permissions' || pathname?.startsWith('/modules') || pathname?.startsWith('/admin/assessment-questions') || pathname?.startsWith('/admin/pdf-queue') || pathname?.startsWith('/admin/audit-logs') || pathname?.startsWith('/admin/settings')) {
       setExpandedMenus((prev) => new Set([...prev, 'admin']))
       if (pathname?.startsWith('/admin/audit-logs')) {
         setExpandedMenus((prev) => new Set([...prev, 'audit-logs']))
       }
+    }
+    
+    // Auto-expand Billing menu if on billing pages
+    if (pathname?.startsWith('/billing') || pathname?.startsWith('/admin/billing') || pathname?.startsWith('/doctor/billing')) {
+      setExpandedMenus((prev) => new Set([...prev, 'billing']))
     }
   }, [pathname])
 
@@ -202,61 +207,129 @@ export default function Sidebar() {
             {/* Billing Menu */}
             {(canViewBilling || isAdmin) && (
               <li>
-                <a
-                  href="javascript: void(0);"
+                <button
+                  type="button"
                   className={`has-arrow waves-effect ${isExpanded('billing') ? 'mm-active' : ''} ${
-                    pathname?.startsWith('/billing') ? 'mm-active' : ''
+                    pathname?.startsWith('/billing') || pathname?.startsWith('/admin/billing') || pathname?.startsWith('/doctor/billing') ? 'mm-active' : ''
                   }`}
                   onClick={(e) => {
                     e.preventDefault()
                     toggleMenu('billing')
                   }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '0.6rem 1.1rem',
+                    color: 'inherit',
+                    cursor: 'pointer',
+                  }}
                 >
                   <i className="mdi mdi-currency-usd"></i>
                   <span>Billing</span>
-                </a>
+                </button>
                 <ul
                   className={`sub-menu ${
-                    isExpanded('billing') || pathname?.startsWith('/billing') ? 'mm-show' : ''
+                    isExpanded('billing') || pathname?.startsWith('/billing') || pathname?.startsWith('/admin/billing') || pathname?.startsWith('/doctor/billing') ? 'mm-show' : ''
                   }`}
                 >
-                  <li>
-                    <Link
-                      href="/billing/dashboard"
-                      className={isActive('/billing/dashboard') ? 'mm-active' : ''}
-                    >
-                      <i className="mdi mdi-view-dashboard"></i>
-                      <span>Dashboard</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/billing/invoices"
-                      className={isActive('/billing/invoices') ? 'mm-active' : ''}
-                    >
-                      <i className="mdi mdi-file-document"></i>
-                      <span>Invoices</span>
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/billing/payments"
-                      className={isActive('/billing/payments') ? 'mm-active' : ''}
-                    >
-                      <i className="mdi mdi-cash-multiple"></i>
-                      <span>Payments</span>
-                    </Link>
-                  </li>
+                  {/* Admin Billing Submenu */}
                   {(canManageBilling || isAdmin) && (
-                    <li>
-                      <Link
-                        href="/billing/rates"
-                        className={isActive('/billing/rates') ? 'mm-active' : ''}
-                      >
-                        <i className="mdi mdi-currency-usd"></i>
-                        <span>Rates</span>
-                      </Link>
-                    </li>
+                    <>
+                      <li className="menu-title" style={{ padding: '0.5rem 1.5rem', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', color: '#6c757d' }}>
+                        Admin
+                      </li>
+                      <li>
+                        <Link
+                          href="/admin/billing/packages"
+                          className={pathname?.startsWith('/admin/billing/packages') ? 'mm-active' : ''}
+                        >
+                          <i className="mdi mdi-package-variant"></i>
+                          <span>Packages</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/admin/billing/subscriptions"
+                          className={pathname?.startsWith('/admin/billing/subscriptions') ? 'mm-active' : ''}
+                        >
+                          <i className="mdi mdi-credit-card"></i>
+                          <span>Subscriptions</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/admin/billing/subscription-invoices"
+                          className={pathname?.startsWith('/admin/billing/subscription-invoices') ? 'mm-active' : ''}
+                        >
+                          <i className="mdi mdi-file-document-multiple"></i>
+                          <span>Subscription Invoices</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/billing/dashboard"
+                          className={isActive('/billing/dashboard') ? 'mm-active' : ''}
+                        >
+                          <i className="mdi mdi-view-dashboard"></i>
+                          <span>Billing Dashboard</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/billing/invoices"
+                          className={isActive('/billing/invoices') ? 'mm-active' : ''}
+                        >
+                          <i className="mdi mdi-file-document"></i>
+                          <span>Assessment Invoices</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/billing/payments"
+                          className={isActive('/billing/payments') ? 'mm-active' : ''}
+                        >
+                          <i className="mdi mdi-cash-multiple"></i>
+                          <span>Payments</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/billing/rates"
+                          className={isActive('/billing/rates') ? 'mm-active' : ''}
+                        >
+                          <i className="mdi mdi-currency-usd"></i>
+                          <span>Rates</span>
+                        </Link>
+                      </li>
+                    </>
+                  )}
+                  {/* Doctor Billing Submenu */}
+                  {hasDoctorRole && !isAdmin && (
+                    <>
+                      <li className="menu-title" style={{ padding: '0.5rem 1.5rem', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', color: '#6c757d' }}>
+                        My Billing
+                      </li>
+                      <li>
+                        <Link
+                          href="/doctor/billing/subscription"
+                          className={pathname?.startsWith('/doctor/billing/subscription') ? 'mm-active' : ''}
+                        >
+                          <i className="mdi mdi-credit-card"></i>
+                          <span>My Subscription</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          href="/doctor/billing/invoices"
+                          className={pathname?.startsWith('/doctor/billing/invoices') ? 'mm-active' : ''}
+                        >
+                          <i className="mdi mdi-file-document"></i>
+                          <span>My Invoices</span>
+                        </Link>
+                      </li>
+                    </>
                   )}
                 </ul>
               </li>
@@ -274,18 +347,27 @@ export default function Sidebar() {
             {/* Access Control Menu - Always show for admins or users with permissions */}
             {(canViewRoles || canViewPermissions || canViewModules || canViewAssessmentQuestions || isAdmin) && (
             <li>
-              <a
-                href="javascript: void(0);"
-                  className={`has-arrow waves-effect ${isExpanded('admin') ? 'mm-active' : ''} ${isActive('/roles') || isActive('/permissions') || isActive('/modules') || isActive('/admin/assessment-questions') || isActive('/admin/audit-logs') ? 'mm-active' : ''}`}
+              <button
+                type="button"
+                  className={`has-arrow waves-effect ${isExpanded('admin') ? 'mm-active' : ''} ${isActive('/roles') || isActive('/permissions') || isActive('/modules') || isActive('/admin/assessment-questions') || isActive('/admin/audit-logs') || pathname?.startsWith('/admin/settings') ? 'mm-active' : ''}`}
                 onClick={(e) => {
                   e.preventDefault()
                     toggleMenu('admin')
                   }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '0.6rem 1.1rem',
+                    color: 'inherit',
+                    cursor: 'pointer',
+                  }}
                 >
                   <i className="uil-shield-check"></i>
                   <span>Access Control</span>
-                </a>
-                <ul className={`sub-menu ${isExpanded('admin') || isActive('/roles') || isActive('/permissions') || isActive('/modules') || isActive('/admin/assessment-questions') || isActive('/admin/audit-logs') ? 'mm-show' : ''}`}>
+                </button>
+                <ul className={`sub-menu ${isExpanded('admin') || isActive('/roles') || isActive('/permissions') || isActive('/modules') || isActive('/admin/assessment-questions') || isActive('/admin/audit-logs') || pathname?.startsWith('/admin/settings') ? 'mm-show' : ''}`}>
                   {canViewRoles && (
                     <li>
                       <Link 
@@ -342,17 +424,35 @@ export default function Sidebar() {
                         </Link>
                       </li>
                       <li>
-                        <a
-                          href="javascript: void(0);"
+                        <Link
+                          href="/admin/settings/stripe"
+                          className={pathname?.startsWith('/admin/settings/stripe') ? 'mm-active' : ''}
+                        >
+                          <i className="mdi mdi-credit-card-settings"></i>
+                          <span>Stripe Settings</span>
+                        </Link>
+                      </li>
+                      <li>
+                        <button
+                          type="button"
                           className={`has-arrow waves-effect ${isExpanded('audit-logs') ? 'mm-active' : ''} ${isActive('/admin/audit-logs') ? 'mm-active' : ''}`}
                           onClick={(e) => {
                             e.preventDefault()
                             toggleMenu('audit-logs')
                           }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            width: '100%',
+                            textAlign: 'left',
+                            padding: '0.6rem 1.1rem',
+                            color: 'inherit',
+                            cursor: 'pointer',
+                          }}
                         >
                           <i className="mdi mdi-file-document-multiple"></i>
                           <span>Audit Logs</span>
-                        </a>
+                        </button>
                         <ul className={`sub-menu ${isExpanded('audit-logs') || isActive('/admin/audit-logs') ? 'mm-show' : ''}`}>
                           <li>
                             <Link

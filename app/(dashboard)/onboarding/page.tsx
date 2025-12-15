@@ -11,6 +11,7 @@ export default function OnboardingPage() {
   const { user, loading: authLoading } = useAuth()
   const { data: status, isLoading: statusLoading } = useOnboardingStatus()
 
+  // Handle authenticated patient onboarding flow (now optional)
   useEffect(() => {
     // Redirect if not authenticated
     if (!authLoading && !user) {
@@ -18,12 +19,16 @@ export default function OnboardingPage() {
       return
     }
 
-    // If onboarding is already completed, redirect to dashboard
-    if (!statusLoading && status?.onboarding_status === 'completed') {
+    // Only patients need onboarding - redirect admins and doctors to dashboard
+    if (!authLoading && user && user.account_type !== 'patient') {
       router.push('/dashboard')
       return
     }
-  }, [user, authLoading, status, statusLoading, router])
+
+    // ✅ NEW: Onboarding is now optional - don't force redirect if incomplete
+    // Patient can skip onboarding and go to dashboard
+    // Only redirect if they explicitly want to complete it
+  }, [user, authLoading, router])
 
   // Show loading while checking status
   if (authLoading || statusLoading) {
@@ -36,11 +41,12 @@ export default function OnboardingPage() {
     )
   }
 
-  // Don't render if redirecting
-  if (!user || status?.onboarding_status === 'completed') {
+  // Don't render if not a patient
+  if (!user || user.account_type !== 'patient') {
     return null
   }
 
+  // ✅ NEW: Show onboarding wizard (now optional - patient can skip)
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
       <OnboardingWizard />

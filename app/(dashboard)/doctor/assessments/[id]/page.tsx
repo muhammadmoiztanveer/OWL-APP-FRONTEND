@@ -1,12 +1,14 @@
 'use client'
 
 import { useParams } from 'next/navigation'
+import { useEffect } from 'react'
 import { useAssessment } from '@/hooks/doctor/useAssessments'
 import Breadcrumb from '@/components/common/Breadcrumb'
 import PermissionGate from '@/components/common/PermissionGate'
 import UnauthorizedMessage from '@/components/common/UnauthorizedMessage'
 import StatusBadge from '@/components/common/StatusBadge'
 import AssessmentPdfSection from '@/components/assessments/AssessmentPdfSection'
+import AssessmentResponses from '@/components/assessments/AssessmentResponses'
 import CreateInvoiceFromAssessmentButton from '@/components/billing/CreateInvoiceFromAssessmentButton'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/contexts/AuthContext'
@@ -58,6 +60,26 @@ export default function AssessmentDetailPage() {
 
   const { data: assessment, isLoading, error, refetch } = useAssessment(id)
   const markAsReviewedMutation = useMarkAsReviewed()
+
+  // Debug: Log assessment data to verify responses are included
+  useEffect(() => {
+    if (assessment && typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('Doctor Assessment Detail - Full assessment:', assessment)
+      console.log('Doctor Assessment Detail - Responses:', assessment.responses)
+      if (assessment.responses && assessment.responses.length > 0) {
+        console.log('Doctor Assessment Detail - First response sample:', assessment.responses[0])
+        console.log('Doctor Assessment Detail - First response question_text:', assessment.responses[0]?.question_text)
+        // Check if any responses are missing question_text
+        const missingText = assessment.responses.filter((r: any) => !r.question_text || !r.question_text.trim())
+        if (missingText.length > 0) {
+          console.warn('Doctor Assessment Detail - Responses missing question_text:', missingText.length, 'out of', assessment.responses.length)
+          console.warn('Doctor Assessment Detail - Sample missing question_text:', missingText[0])
+        }
+      }
+      console.log('Doctor Assessment Detail - Responses length:', assessment.responses?.length)
+      console.log('Doctor Assessment Detail - Status:', assessment.status)
+    }
+  }, [assessment])
 
   const handleMarkAsReviewed = async () => {
     try {
@@ -274,6 +296,31 @@ export default function AssessmentDetailPage() {
                 </div>
               )}
 
+              {/* Question Responses - Show for completed assessments (moved before recommendations for better visibility) */}
+              {assessment.status === 'completed' && (
+                <div className="mb-4">
+                  {assessment.responses && assessment.responses.length > 0 ? (
+                    <AssessmentResponses
+                      responses={assessment.responses}
+                      title="Patient Responses"
+                      defaultExpanded={true}
+                    />
+                  ) : (
+                    <div className="alert alert-warning mb-4">
+                      <i className="mdi mdi-alert-outline me-2"></i>
+                      <strong>No response data available.</strong> The responses may not have been saved. Please check the backend API response.
+                      {process.env.NODE_ENV === 'development' && (
+                        <div className="mt-2 small">
+                          <strong>Debug Info:</strong> Assessment ID: {assessment.id}, Status: {assessment.status}
+                          <br />
+                          Responses array: {assessment.responses ? `exists (length: ${assessment.responses.length})` : 'undefined'}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Recommendations */}
               {recommendation && (
                 <div className="mb-4">
@@ -290,45 +337,6 @@ export default function AssessmentDetailPage() {
                     ) : (
                       <p className="mb-0">{typeof recommendation === 'string' ? recommendation : 'No recommendation available.'}</p>
                     )}
-                  </div>
-                </div>
-              )}
-
-              {/* Question Responses */}
-              {assessment.responses && assessment.responses.length > 0 && (
-                <div className="mb-4">
-                  <h5 className="mb-3">Patient Responses</h5>
-                  <div className="table-responsive">
-                    <table className="table table-bordered">
-                      <thead>
-                        <tr>
-                          <th style={{ width: '60%' }}>Question</th>
-                          <th style={{ width: '20%' }}>Answer</th>
-                          <th style={{ width: '20%' }}>Score</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {assessment.responses.map((response, index) => (
-                          <tr key={response.id || index}>
-                            <td>
-                              {response.question?.text || response.question || `Question ${index + 1}`}
-                            </td>
-                            <td>
-                              {response.answer !== undefined
-                                ? typeof response.answer === 'number'
-                                  ? ['Not at all', 'Several days', 'More than half the days', 'Nearly every day'][
-                                      response.answer
-                                    ] || response.answer
-                                  : response.answer
-                                : 'N/A'}
-                            </td>
-                            <td>
-                              <span className="badge bg-primary">{response.score}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
                   </div>
                 </div>
               )}

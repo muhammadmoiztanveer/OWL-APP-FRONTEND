@@ -55,9 +55,18 @@ export default function AssessmentCompletionPage() {
         setError(null)
 
         // Validate token
+        console.log('Validating assessment token:', token)
         const validationResponse = await assessmentsApi.validateToken(token)
+        console.log('Validation response:', validationResponse)
+        
         if (!validationResponse.success || !validationResponse.data) {
-          setError('Invalid or expired assessment link. Please contact your healthcare provider.')
+          const errorMsg = validationResponse.message || 'Invalid or expired assessment link'
+          console.error('Token validation failed:', {
+            success: validationResponse.success,
+            message: validationResponse.message,
+            data: validationResponse.data,
+          })
+          setError(`${errorMsg}. Please contact your healthcare provider.`)
           return
         }
 
@@ -72,7 +81,12 @@ export default function AssessmentCompletionPage() {
 
         setQuestions(questionsResponse.data.questions.sort((a, b) => a.order_num - b.order_num))
       } catch (err: any) {
-        console.error('Error loading assessment:', err)
+        console.error('Error loading assessment:', {
+          error: err,
+          response: err.response?.data,
+          status: err.response?.status,
+          token: token,
+        })
         const message =
           err.response?.data?.message ||
           err.message ||
