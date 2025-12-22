@@ -7,9 +7,17 @@ export default function RightSidebar() {
         <div data-simplebar className="h-100">
           <div className="rightbar-title d-flex align-items-center p-3">
             <h5 className="m-0 me-2">Settings</h5>
-            <a href="javascript:void(0);" className="right-bar-toggle ms-auto">
+            <button
+              type="button"
+              className="right-bar-toggle ms-auto"
+              style={{
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+              }}
+            >
               <i className="mdi mdi-close noti-icon"></i>
-            </a>
+            </button>
           </div>
 
           {/* Settings */}

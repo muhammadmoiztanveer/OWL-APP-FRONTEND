@@ -18,7 +18,6 @@ export default function AssessmentPdfSection({
 }: AssessmentPdfSectionProps) {
   const { user } = useAuth()
   const { isAdmin, hasPermission } = usePermissions()
-  const [shouldPoll, setShouldPoll] = useState(false)
 
   // Check if user can regenerate PDF
   const canRegenerate =
@@ -27,29 +26,46 @@ export default function AssessmentPdfSection({
       user?.roles?.some((r) => r.name === 'doctor') &&
       assessment?.doctor_id === user?.doctor?.id)
 
-  // Fetch PDF status with polling if generating
+  // Fetch PDF status with dynamic polling based on status
+  // Use a function for refetchInterval that checks the current status
   const { data: pdfStatus, isLoading, refetch } = usePdfStatus(assessmentId, {
     enabled: !!assessmentId,
-    refetchInterval: shouldPoll ? 3000 : false, // Poll every 3 seconds if generating
+    refetchInterval: (data) => {
+      if (!data) return false
+      const statusState = getPdfStatusState(data)
+      // Poll every 3 seconds if generating or pending
+      if (statusState === 'generating' || statusState === 'pending') {
+        return 3000
+      }
+      // Stop polling if ready or failed
+      return false
+    },
   })
 
   const downloadMutation = useDownloadPdf()
   const regenerateMutation = useRegeneratePdf()
 
-  // Determine if we should poll based on status
-  useEffect(() => {
-    if (pdfStatus) {
-      const statusState = getPdfStatusState(pdfStatus)
-      const shouldStartPolling =
-        statusState === 'generating' || statusState === 'pending'
-      setShouldPoll(shouldStartPolling)
+  // Determine if we should show polling message
+  const shouldPoll = pdfStatus
+    ? (() => {
+        const statusState = getPdfStatusState(pdfStatus)
+        return statusState === 'generating' || statusState === 'pending'
+      })()
+    : false
 
-      // Stop polling if completed or failed
-      if (statusState === 'ready' || statusState === 'failed') {
-        setShouldPoll(false)
-      }
+  // Debug logging (only in development)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && pdfStatus) {
+      console.log('PDF Status:', {
+        has_pdf: pdfStatus.has_pdf,
+        queue_status: pdfStatus.queue_status,
+        queue_error: pdfStatus.queue_error,
+        queue_attempts: pdfStatus.queue_attempts,
+        shouldPoll,
+        statusState: getPdfStatusState(pdfStatus),
+      })
     }
-  }, [pdfStatus])
+  }, [pdfStatus, shouldPoll])
 
   const handleDownload = async () => {
     downloadMutation.mutate(assessmentId)

@@ -139,12 +139,6 @@ export const assessmentsApi = {
     return response.data
   },
 
-  // Doctor: Get patient assessment results
-  getPatientAssessments: async (patientId: number): Promise<ApiResponse<Assessment[]>> => {
-    const response = await api.get<ApiResponse<Assessment[]>>(`/assessments/patient/${patientId}`)
-    return response.data
-  },
-
   // Patient: Get single assessment by ID (for viewing completed assessment)
   getPatientAssessment: async (id: number): Promise<ApiResponse<Assessment>> => {
     const response = await api.get<ApiResponse<Assessment>>(`/assessments/${id}`)

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useHasPermission } from '@/hooks/useHasPermission'
 import { useHasRole } from '@/hooks/useHasRole'
 import { useAuth } from '@/contexts/AuthContext'
@@ -12,6 +12,7 @@ import { usePermissions } from '@/hooks/usePermissions'
 export default function Sidebar() {
   const pathname = usePathname()
   const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set())
+  const manuallyToggledMenus = useRef<Set<string>>(new Set())
   const { isImpersonating, impersonatingUser } = useAuth()
   const canViewRoles = useHasPermission('view roles')
   const canViewPermissions = useHasPermission('view permissions')
@@ -50,26 +51,69 @@ export default function Sidebar() {
       initSimplebar()
     }
     
-    // Auto-expand Access Control menu if on roles, permissions, modules, assessment questions, PDF queue, settings, or audit logs page
-    if (pathname === '/roles' || pathname === '/permissions' || pathname?.startsWith('/modules') || pathname?.startsWith('/admin/assessment-questions') || pathname?.startsWith('/admin/pdf-queue') || pathname?.startsWith('/admin/audit-logs') || pathname?.startsWith('/admin/settings')) {
-      setExpandedMenus((prev) => new Set([...prev, 'admin']))
-      if (pathname?.startsWith('/admin/audit-logs')) {
-        setExpandedMenus((prev) => new Set([...prev, 'audit-logs']))
+    // Check if we're on Access Control related pages
+    const isOnAdminPage = pathname === '/roles' || pathname === '/permissions' || pathname?.startsWith('/modules') || pathname?.startsWith('/admin/assessment-questions') || pathname?.startsWith('/admin/pdf-queue') || pathname?.startsWith('/admin/audit-logs') || pathname?.startsWith('/admin/settings')
+    
+    // Check if we're on Billing related pages
+    const isOnBillingPage = pathname?.startsWith('/billing') || pathname?.startsWith('/admin/billing') || pathname?.startsWith('/doctor/billing')
+    
+    // Clear manual toggle flag if navigated away from menu's pages (allows auto-expand to work again when coming back)
+    if (!isOnAdminPage) {
+      manuallyToggledMenus.current.delete('admin')
+    }
+    if (!isOnBillingPage) {
+      manuallyToggledMenus.current.delete('billing')
+    }
+    if (!pathname?.startsWith('/admin/audit-logs')) {
+      manuallyToggledMenus.current.delete('audit-logs')
+    }
+    
+    // Auto-expand menus only if not manually toggled
+    // IMPORTANT: If a menu is in manuallyToggledMenus, we NEVER auto-expand it
+    // This ensures user's manual toggle takes precedence
+    if (isOnAdminPage && !manuallyToggledMenus.current.has('admin')) {
+      setExpandedMenus((prev) => {
+        if (prev.has('admin')) return prev // Already expanded
+        const newSet = new Set(prev)
+        newSet.add('admin')
+        return newSet
+      })
+      // Auto-expand audit-logs submenu if on audit logs page
+      if (pathname?.startsWith('/admin/audit-logs') && !manuallyToggledMenus.current.has('audit-logs')) {
+        setExpandedMenus((prev) => {
+          if (prev.has('audit-logs')) return prev // Already expanded
+          const newSet = new Set(prev)
+          newSet.add('audit-logs')
+          return newSet
+        })
       }
     }
     
-    // Auto-expand Billing menu if on billing pages
-    if (pathname?.startsWith('/billing') || pathname?.startsWith('/admin/billing') || pathname?.startsWith('/doctor/billing')) {
-      setExpandedMenus((prev) => new Set([...prev, 'billing']))
+    // Auto-expand Billing menu if on billing pages and not manually toggled
+    if (isOnBillingPage && !manuallyToggledMenus.current.has('billing')) {
+      setExpandedMenus((prev) => {
+        if (prev.has('billing')) return prev // Already expanded
+        const newSet = new Set(prev)
+        newSet.add('billing')
+        return newSet
+      })
     }
   }, [pathname])
 
   const toggleMenu = (menuId: string) => {
+    // Mark this menu as manually toggled BEFORE updating state
+    // This prevents useEffect from auto-expanding it
+    manuallyToggledMenus.current.add(menuId)
+    
     setExpandedMenus((prev) => {
       const newSet = new Set(prev)
-      if (newSet.has(menuId)) {
+      const isCurrentlyExpanded = newSet.has(menuId)
+      
+      if (isCurrentlyExpanded) {
+        // Collapse the menu - remove from expanded set
         newSet.delete(menuId)
       } else {
+        // Expand the menu - add to expanded set
         newSet.add(menuId)
       }
       return newSet
@@ -209,9 +253,7 @@ export default function Sidebar() {
               <li>
                 <button
                   type="button"
-                  className={`has-arrow waves-effect ${isExpanded('billing') ? 'mm-active' : ''} ${
-                    pathname?.startsWith('/billing') || pathname?.startsWith('/admin/billing') || pathname?.startsWith('/doctor/billing') ? 'mm-active' : ''
-                  }`}
+                  className={`has-arrow waves-effect ${isExpanded('billing') ? 'mm-active' : ''}`}
                   onClick={(e) => {
                     e.preventDefault()
                     toggleMenu('billing')
@@ -230,9 +272,7 @@ export default function Sidebar() {
                   <span>Billing</span>
                 </button>
                 <ul
-                  className={`sub-menu ${
-                    isExpanded('billing') || pathname?.startsWith('/billing') || pathname?.startsWith('/admin/billing') || pathname?.startsWith('/doctor/billing') ? 'mm-show' : ''
-                  }`}
+                  className={`sub-menu ${isExpanded('billing') ? 'mm-show' : ''}`}
                 >
                   {/* Admin Billing Submenu */}
                   {(canManageBilling || isAdmin) && (
@@ -349,7 +389,7 @@ export default function Sidebar() {
             <li>
               <button
                 type="button"
-                  className={`has-arrow waves-effect ${isExpanded('admin') ? 'mm-active' : ''} ${isActive('/roles') || isActive('/permissions') || isActive('/modules') || isActive('/admin/assessment-questions') || isActive('/admin/audit-logs') || pathname?.startsWith('/admin/settings') ? 'mm-active' : ''}`}
+                  className={`has-arrow waves-effect ${isExpanded('admin') ? 'mm-active' : ''}`}
                 onClick={(e) => {
                   e.preventDefault()
                     toggleMenu('admin')
@@ -367,7 +407,7 @@ export default function Sidebar() {
                   <i className="uil-shield-check"></i>
                   <span>Access Control</span>
                 </button>
-                <ul className={`sub-menu ${isExpanded('admin') || isActive('/roles') || isActive('/permissions') || isActive('/modules') || isActive('/admin/assessment-questions') || isActive('/admin/audit-logs') || pathname?.startsWith('/admin/settings') ? 'mm-show' : ''}`}>
+                <ul className={`sub-menu ${isExpanded('admin') ? 'mm-show' : ''}`}>
                   {canViewRoles && (
                     <li>
                       <Link 
@@ -435,7 +475,7 @@ export default function Sidebar() {
                       <li>
                         <button
                           type="button"
-                          className={`has-arrow waves-effect ${isExpanded('audit-logs') ? 'mm-active' : ''} ${isActive('/admin/audit-logs') ? 'mm-active' : ''}`}
+                          className={`has-arrow waves-effect ${isExpanded('audit-logs') ? 'mm-active' : ''}`}
                           onClick={(e) => {
                             e.preventDefault()
                             toggleMenu('audit-logs')
@@ -453,7 +493,7 @@ export default function Sidebar() {
                           <i className="mdi mdi-file-document-multiple"></i>
                           <span>Audit Logs</span>
                         </button>
-                        <ul className={`sub-menu ${isExpanded('audit-logs') || isActive('/admin/audit-logs') ? 'mm-show' : ''}`}>
+                        <ul className={`sub-menu ${isExpanded('audit-logs') ? 'mm-show' : ''}`}>
                           <li>
                             <Link
                               href="/admin/audit-logs"

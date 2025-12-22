@@ -4,7 +4,13 @@ import { PdfStatus } from '@/lib/types'
 import { useAuth } from '@/contexts/AuthContext'
 import toast from 'react-hot-toast'
 
-export function usePdfStatus(assessmentId: number, options?: { enabled?: boolean; refetchInterval?: number }) {
+export function usePdfStatus(
+  assessmentId: number,
+  options?: {
+    enabled?: boolean
+    refetchInterval?: number | boolean | ((data: PdfStatus | undefined) => number | false)
+  }
+) {
   const { isAuthenticated } = useAuth()
 
   return useQuery({
@@ -17,7 +23,7 @@ export function usePdfStatus(assessmentId: number, options?: { enabled?: boolean
       return response.data
     },
     enabled: !!assessmentId && isAuthenticated && (options?.enabled !== false),
-    refetchInterval: options?.refetchInterval || false,
+    refetchInterval: options?.refetchInterval ?? false,
     onError: (error: any) => {
       if (error.response?.status !== 404) {
         // Don't show error for 404 (PDF not generated yet)
