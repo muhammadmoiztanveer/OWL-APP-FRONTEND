@@ -44,200 +44,15 @@ export default function Topbar() {
           </button>
 
           {/* App Search*/}
-          <form className="app-search d-none d-lg-block">
+          {/* <form className="app-search d-none d-lg-block">
             <div className="position-relative">
               <input type="text" className="form-control" placeholder="Search..." />
               <span className="uil-search"></span>
             </div>
-          </form>
+          </form> */}
         </div>
 
-        <div className="d-flex">
-          <div className="dropdown d-inline-block d-lg-none ms-2">
-            <button
-              type="button"
-              className="btn header-item noti-icon waves-effect"
-              id="page-header-search-dropdown"
-              data-bs-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <i className="uil-search"></i>
-            </button>
-            <div
-              className="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
-              aria-labelledby="page-header-search-dropdown"
-            >
-              <form className="p-3">
-                <div className="form-group m-0">
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Search..."
-                      aria-label="Recipient's username"
-                    />
-                    <div className="input-group-append">
-                      <button className="btn btn-primary" type="submit">
-                        <i className="mdi mdi-magnify"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <div className="dropdown d-inline-block language-switch">
-            <button
-              type="button"
-              className="btn header-item waves-effect"
-              data-bs-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <Image
-                src="/assets/images/flags/us.jpg"
-                alt="Header Language"
-                height={16}
-                width={16}
-              />
-            </button>
-            <div className="dropdown-menu dropdown-menu-end">
-              <Link href="/dashboard?lang=en" className="dropdown-item notify-item">
-                <Image
-                  src="/assets/images/flags/us.jpg"
-                  alt="user-image"
-                  className="me-1"
-                  height={12}
-                  width={12}
-                />{' '}
-                <span className="align-middle">English</span>
-              </Link>
-              <Link href="/dashboard?lang=es" className="dropdown-item notify-item">
-                <Image
-                  src="/assets/images/flags/spain.jpg"
-                  alt="user-image"
-                  className="me-1"
-                  height={12}
-                  width={12}
-                />{' '}
-                <span className="align-middle">Spanish</span>
-              </Link>
-              <Link href="/dashboard?lang=de" className="dropdown-item notify-item">
-                <Image
-                  src="/assets/images/flags/germany.jpg"
-                  alt="user-image"
-                  className="me-1"
-                  height={12}
-                  width={12}
-                />{' '}
-                <span className="align-middle">German</span>
-              </Link>
-              <Link href="/dashboard?lang=it" className="dropdown-item notify-item">
-                <Image
-                  src="/assets/images/flags/italy.jpg"
-                  alt="user-image"
-                  className="me-1"
-                  height={12}
-                  width={12}
-                />{' '}
-                <span className="align-middle">Italian</span>
-              </Link>
-              <Link href="/dashboard?lang=ru" className="dropdown-item notify-item">
-                <Image
-                  src="/assets/images/flags/russia.jpg"
-                  alt="user-image"
-                  className="me-1"
-                  height={12}
-                  width={12}
-                />{' '}
-                <span className="align-middle">Russian</span>
-              </Link>
-            </div>
-          </div>
-
-          <div className="dropdown d-none d-lg-inline-block ms-1">
-            <button
-              type="button"
-              className="btn header-item noti-icon waves-effect"
-              data-bs-toggle="dropdown"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-              <i className="uil-apps"></i>
-            </button>
-            <div className="dropdown-menu dropdown-menu-lg dropdown-menu-end">
-              <div className="px-lg-2">
-                <div className="row g-0">
-                  <div className="col">
-                    <a className="dropdown-icon-item" href="#">
-                      <Image src="/assets/images/brands/github.png" alt="Github" width={20} height={20} />
-                      <span>GitHub</span>
-                    </a>
-                  </div>
-                  <div className="col">
-                    <a className="dropdown-icon-item" href="#">
-                      <Image
-                        src="/assets/images/brands/bitbucket.png"
-                        alt="bitbucket"
-                        width={20}
-                        height={20}
-                      />
-                      <span>Bitbucket</span>
-                    </a>
-                  </div>
-                  <div className="col">
-                    <a className="dropdown-icon-item" href="#">
-                      <Image
-                        src="/assets/images/brands/dribbble.png"
-                        alt="dribbble"
-                        width={20}
-                        height={20}
-                      />
-                      <span>Dribbble</span>
-                    </a>
-                  </div>
-                </div>
-
-                <div className="row g-0">
-                  <div className="col">
-                    <a className="dropdown-icon-item" href="#">
-                      <Image
-                        src="/assets/images/brands/dropbox.png"
-                        alt="dropbox"
-                        width={20}
-                        height={20}
-                      />
-                      <span>Dropbox</span>
-                    </a>
-                  </div>
-                  <div className="col">
-                    <a className="dropdown-icon-item" href="#">
-                      <Image
-                        src="/assets/images/brands/mail_chimp.png"
-                        alt="mail_chimp"
-                        width={20}
-                        height={20}
-                      />
-                      <span>Mail Chimp</span>
-                    </a>
-                  </div>
-                  <div className="col">
-                    <a className="dropdown-icon-item" href="#">
-                      <Image
-                        src="/assets/images/brands/slack.png"
-                        alt="slack"
-                        width={20}
-                        height={20}
-                      />
-                      <span>Slack</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="d-flex">         
 
           <div className="dropdown d-none d-lg-inline-block ms-1">
             <button
@@ -372,9 +187,16 @@ export default function Topbar() {
               </div>
               <div className="p-2 border-top">
                 <div className="d-grid">
-                  <a className="btn btn-sm btn-link font-size-14 text-center" href="javascript:void(0)">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-link font-size-14 text-center"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      // Add your "View More" functionality here
+                    }}
+                  >
                     <i className="uil-arrow-circle-right me-1"></i> View More..
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>

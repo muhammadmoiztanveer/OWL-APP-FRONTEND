@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { assessmentsApi, Assessment } from '@/lib/api/assessments'
-import AssessmentResponses from '@/components/assessments/AssessmentResponses'
+import { doctorApi } from '@/lib/api/doctor'
+import { Assessment } from '@/lib/types'
+import AssessmentResponsesModal from '@/components/assessments/AssessmentResponsesModal'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 
@@ -13,6 +14,8 @@ interface PatientAssessmentResultsProps {
 export default function PatientAssessmentResults({ patientId }: PatientAssessmentResultsProps) {
   const [assessments, setAssessments] = useState<Assessment[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null)
+  const [showModal, setShowModal] = useState(false)
 
   useEffect(() => {
     fetchAssessments()
@@ -21,7 +24,7 @@ export default function PatientAssessmentResults({ patientId }: PatientAssessmen
   const fetchAssessments = async () => {
     setLoading(true)
     try {
-      const response = await assessmentsApi.getPatientAssessments(patientId)
+      const response = await doctorApi.getPatientAssessments(patientId)
       if (response.success && response.data) {
         setAssessments(response.data)
       }
@@ -158,11 +161,20 @@ export default function PatientAssessmentResults({ patientId }: PatientAssessmen
                   {/* Show responses if available */}
                   {assessment.responses && assessment.responses.length > 0 && (
                     <div className="mt-3 pt-3 border-top">
-                      <AssessmentResponses
-                        responses={assessment.responses}
-                        title="Patient Answers"
-                        defaultExpanded={false}
-                      />
+                      <div className="d-flex justify-content-between align-items-center">
+                        <h6 className="mb-0">Patient Answers</h6>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => {
+                            setSelectedAssessment(assessment)
+                            setShowModal(true)
+                          }}
+                        >
+                          <i className="mdi mdi-chevron-down me-1"></i>
+                          Show ({assessment.responses.length})
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -170,6 +182,19 @@ export default function PatientAssessmentResults({ patientId }: PatientAssessmen
             </div>
           ))}
         </div>
+      )}
+
+      {/* Assessment Responses Modal */}
+      {selectedAssessment && selectedAssessment.responses && (
+        <AssessmentResponsesModal
+          show={showModal}
+          onClose={() => {
+            setShowModal(false)
+            setSelectedAssessment(null)
+          }}
+          responses={selectedAssessment.responses}
+          title={`Patient Answers - ${selectedAssessment.assessment_type}`}
+        />
       )}
     </div>
   )

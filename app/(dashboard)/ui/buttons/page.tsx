@@ -399,15 +399,15 @@ export default function ButtonsPage() {
                     </div>
 
                     <div className="btn-group" role="group" aria-label="Basic example">
-                      <a href="javascript:void(0);" className="btn btn-outline-primary active" aria-current="page">
+                      <button type="button" className="btn btn-outline-primary active" aria-current="page">
                         Left
-                      </a>
-                      <a href="javascript:void(0);" className="btn btn-outline-primary">
+                      </button>
+                      <button type="button" className="btn btn-outline-primary">
                         Middle
-                      </a>
-                      <a href="javascript:void(0);" className="btn btn-outline-primary">
+                      </button>
+                      <button type="button" className="btn btn-outline-primary">
                         Right
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </div>

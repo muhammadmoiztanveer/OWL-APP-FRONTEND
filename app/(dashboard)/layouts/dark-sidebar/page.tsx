@@ -207,9 +207,9 @@ export default function DarkSidebarPage() {
                     Enhance your <b>Campaign</b> for better outreach <i className="mdi mdi-arrow-right"></i>
                   </p>
                   <div className="mt-4">
-                    <a href="javascript: void(0);" className="btn btn-success waves-effect waves-light">
+                    <button type="button" className="btn btn-success waves-effect waves-light">
                       Upgrade Account!
-                    </a>
+                    </button>
                   </div>
                 </div>
                 <div className="col-sm-4">
@@ -666,9 +666,9 @@ export default function DarkSidebarPage() {
                           </div>
                         </td>
                         <td>
-                          <a href="javascript: void(0);" className="text-body fw-bold">
+                          <span className="text-body fw-bold">
                             {transaction.id}
-                          </a>{' '}
+                          </span>{' '}
                         </td>
                         <td>{transaction.name}</td>
                         <td>{transaction.date}</td>

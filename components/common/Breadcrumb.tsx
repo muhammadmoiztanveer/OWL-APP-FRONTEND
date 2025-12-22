@@ -13,7 +13,7 @@ export default function Breadcrumb({ pagetitle = 'MENTAL HEALTH ASSESSMENT SYSTE
           <div className="page-title-right">
             <ol className="breadcrumb m-0">
               <li className="breadcrumb-item">
-                <a href="javascript: void(0);">{pagetitle}</a>
+                <span>{pagetitle}</span>
               </li>
               <li className="breadcrumb-item active">{title}</li>
             </ol>
