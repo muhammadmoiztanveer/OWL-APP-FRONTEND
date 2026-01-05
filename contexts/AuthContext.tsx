@@ -20,7 +20,7 @@ interface AuthContextType {
   logout: () => Promise<void>
   refreshProfile: () => Promise<void>
   loginAsDoctor: (doctorUserId: number) => Promise<void>
-  stopImpersonating: () => void
+  stopImpersonating: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -259,8 +259,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           created_at: doctorUserData.created_at,
           updated_at: doctorUserData.updated_at,
         }
-        setImpersonatingUser(doctorUser)
-        localStorage.setItem('impersonating_user', JSON.stringify(doctorUser))
+        
+        // ✅ Handle impersonating flag from backend response
+        // Backend now returns impersonating: true in the response
+        if (response.impersonating !== undefined) {
+          // Backend is managing impersonation state, we just track it locally
+          setImpersonatingUser(doctorUser)
+          localStorage.setItem('impersonating_user', JSON.stringify(doctorUser))
+        } else {
+          // Fallback for backward compatibility
+          setImpersonatingUser(doctorUser)
+          localStorage.setItem('impersonating_user', JSON.stringify(doctorUser))
+        }
+        
         toast.success(`Now viewing as ${doctorUser.name}`)
         router.push('/dashboard')
       } else {
@@ -276,11 +287,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const stopImpersonating = () => {
-    setImpersonatingUser(null)
-    localStorage.removeItem('impersonating_user')
-    toast.success('Returned to admin view')
-    router.push('/dashboard')
+  const stopImpersonating = async () => {
+    try {
+      // ✅ Call backend endpoint to stop impersonation
+      const response = await usersApi.stopImpersonation()
+      if (response.success && response.data) {
+        // Backend returns the admin user data
+        const adminUserData = response.data
+        const adminUser: User = {
+          id: adminUserData.id,
+          name: adminUserData.name,
+          email: adminUserData.email,
+          account_type: adminUserData.account_type as any,
+          roles: adminUserData.roles,
+          permissions: adminUserData.permissions,
+          directPermissions: adminUserData.directPermissions,
+          allPermissions: adminUserData.allPermissions,
+          created_at: adminUserData.created_at,
+          updated_at: adminUserData.updated_at,
+        }
+        
+        // Clear impersonation state
+        setImpersonatingUser(null)
+        localStorage.removeItem('impersonating_user')
+        
+        // Update user context with admin user (in case it changed)
+        setUser(adminUser)
+        localStorage.setItem('user', JSON.stringify(adminUser))
+        
+        toast.success('Returned to admin view')
+        router.push('/dashboard')
+      } else {
+        throw new Error(response.message || 'Failed to stop impersonation')
+      }
+    } catch (error: any) {
+      // If backend call fails, still clear local state as fallback
+      setImpersonatingUser(null)
+      localStorage.removeItem('impersonating_user')
+      
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to stop impersonation'
+      toast.error(message)
+      throw error
+    }
   }
 
   // Load impersonation state on mount

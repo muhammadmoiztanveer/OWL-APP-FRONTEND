@@ -2,19 +2,17 @@
 
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { useAssessment } from '@/hooks/doctor/useAssessments'
+import { useAdminAssessment } from '@/hooks/admin/useAdminAssessments'
 import Breadcrumb from '@/components/common/Breadcrumb'
-import PermissionGate from '@/components/common/PermissionGate'
 import UnauthorizedMessage from '@/components/common/UnauthorizedMessage'
 import StatusBadge from '@/components/common/StatusBadge'
 import AssessmentPdfSection from '@/components/assessments/AssessmentPdfSection'
-import AssessmentResponses from '@/components/assessments/AssessmentResponses'
 import AssessmentResponsesModal from '@/components/assessments/AssessmentResponsesModal'
 import CreateInvoiceFromAssessmentButton from '@/components/billing/CreateInvoiceFromAssessmentButton'
-import { usePermissions } from '@/hooks/usePermissions'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useAuth } from '@/contexts/AuthContext'
-import { useMarkAsReviewed } from '@/hooks/doctor/useAssessments'
-import { doctorApi } from '@/lib/api/doctor'
+import { usePermissions } from '@/hooks/usePermissions'
+import { adminApi } from '@/lib/api/admin'
 import { Severity } from '@/lib/types'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
@@ -53,47 +51,24 @@ const getSeverityColor = (level: string): string => {
   return colors[level] || 'secondary'
 }
 
-export default function AssessmentDetailPage() {
+export default function AdminAssessmentDetailPage() {
   const params = useParams()
   const id = parseInt(params.id as string, 10)
-
-  const { hasPermission } = usePermissions()
+  const isAdmin = useIsAdmin()
   const { refreshProfile } = useAuth()
-
-  const { data: assessment, isLoading, error, refetch } = useAssessment(id)
-  const markAsReviewedMutation = useMarkAsReviewed()
+  const { hasPermission } = usePermissions()
   const [showResponsesModal, setShowResponsesModal] = useState(false)
   const [loadingResponses, setLoadingResponses] = useState(false)
   const [fullAssessment, setFullAssessment] = useState<any>(null)
 
-  // Debug: Log assessment data to verify responses are included
-  useEffect(() => {
-    if (assessment && typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-      console.log('Doctor Assessment Detail - Full assessment:', assessment)
-      console.log('Doctor Assessment Detail - Responses:', assessment.responses)
-      if (assessment.responses && assessment.responses.length > 0) {
-        console.log('Doctor Assessment Detail - First response sample:', assessment.responses[0])
-        console.log('Doctor Assessment Detail - First response question_text:', assessment.responses[0]?.question_text)
-        // Check if any responses are missing question_text
-        const missingText = assessment.responses.filter((r: any) => !r.question_text || !r.question_text.trim())
-        if (missingText.length > 0) {
-          console.warn('Doctor Assessment Detail - Responses missing question_text:', missingText.length, 'out of', assessment.responses.length)
-          console.warn('Doctor Assessment Detail - Sample missing question_text:', missingText[0])
-        }
-      }
-      console.log('Doctor Assessment Detail - Responses length:', assessment.responses?.length)
-      console.log('Doctor Assessment Detail - Status:', assessment.status)
-    }
-  }, [assessment])
+  const { data: assessment, isLoading, error } = useAdminAssessment(id)
 
-  const handleMarkAsReviewed = async () => {
-    try {
-      await markAsReviewedMutation.mutateAsync(id)
-      refetch() // Refresh the assessment data
-    } catch (error) {
-      // Error handled by mutation
-    }
-  }
+  useEffect(() => {
+    refreshProfile().catch(() => {
+      // Silently fail
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleViewResponses = async () => {
     // Try to get patient_id from multiple possible locations
@@ -107,7 +82,7 @@ export default function AssessmentDetailPage() {
 
     setLoadingResponses(true)
     try {
-      const response = await doctorApi.getPatientAssessmentResponses(patientId, assessment.id)
+      const response = await adminApi.getPatientAssessmentResponses(patientId, assessment.id)
       if (response.success && response.data) {
         setFullAssessment(response.data)
         setShowResponsesModal(true)
@@ -120,6 +95,15 @@ export default function AssessmentDetailPage() {
     } finally {
       setLoadingResponses(false)
     }
+  }
+
+  if (!isAdmin) {
+    return (
+      <>
+        <Breadcrumb pagetitle="MENTAL HEALTH ASSESSMENT SYSTEM" title="Assessment Details" />
+        <UnauthorizedMessage message="Only administrators can view assessment details." />
+      </>
+    )
   }
 
   if (error && (error as any).response?.status === 403) {
@@ -142,7 +126,7 @@ export default function AssessmentDetailPage() {
                 <i className="uil-exclamation-octagon font-size-48 text-warning"></i>
                 <h4 className="mt-3 mb-2">Assessment Not Found</h4>
                 <p className="text-muted">The assessment you're looking for doesn't exist or has been removed.</p>
-                <Link href="/doctor/assessments" className="btn btn-primary mt-3">
+                <Link href="/admin/assessments" className="btn btn-primary mt-3">
                   Back to Assessments
                 </Link>
               </div>
@@ -188,10 +172,9 @@ export default function AssessmentDetailPage() {
   const severity = assessment.severity as Severity | { phq9: Severity; gad7: Severity } | undefined
   const recommendation = assessment.recommendation as string | { phq9: string; gad7: string } | undefined
   const isComprehensive = assessment.assessment_type === 'comprehensive'
-  const canMarkAsReviewed = hasPermission('assessment.update') && assessment.status === 'completed'
 
   return (
-    <PermissionGate permission="assessment.view" fallback={<UnauthorizedMessage />}>
+    <>
       <Breadcrumb pagetitle="MENTAL HEALTH ASSESSMENT SYSTEM" title="Assessment Details" />
 
       <div className="row">
@@ -205,25 +188,79 @@ export default function AssessmentDetailPage() {
                 </div>
                 <div className="d-flex gap-2 align-items-center">
                   <StatusBadge status={assessment.status} />
-                  {canMarkAsReviewed && (
-                    <button
-                      className="btn btn-danger"
-                      onClick={handleMarkAsReviewed}
-                      disabled={markAsReviewedMutation.isPending}
-                    >
-                      {markAsReviewedMutation.isPending ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                          Marking...
-                        </>
-                      ) : (
-                        <>
-                          <i className="mdi mdi-check-circle me-1"></i>
-                          Mark as Reviewed
-                        </>
-                      )}
-                    </button>
-                  )}
+                </div>
+              </div>
+
+              {/* Patient & Doctor Information */}
+              <div className="row mb-4">
+                <div className="col-md-6">
+                  <div className="card border">
+                    <div className="card-body">
+                      <h5 className="card-title mb-3">Patient Information</h5>
+                      <table className="table table-sm table-borderless mb-0">
+                        <tbody>
+                          <tr>
+                            <th style={{ width: '40%' }}>Name:</th>
+                            <td>{assessment.patient?.name || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <th>Email:</th>
+                            <td>{assessment.patient?.email || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <th>Patient ID:</th>
+                            <td>#{assessment.patient_id}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="card border">
+                    <div className="card-body">
+                      <h5 className="card-title mb-3">Doctor Information</h5>
+                      <table className="table table-sm table-borderless mb-0">
+                        <tbody>
+                          <tr>
+                            <th style={{ width: '40%' }}>Doctor:</th>
+                            <td>
+                              {assessment.doctor?.first_name && assessment.doctor?.last_name
+                                ? `${assessment.doctor.first_name} ${assessment.doctor.last_name}`
+                                : assessment.doctor?.full_name || 'N/A'}
+                            </td>
+                          </tr>
+                          <tr>
+                            <th>Email:</th>
+                            <td>{assessment.doctor?.email || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <th>Practice:</th>
+                            <td>{assessment.doctor?.practice_name || 'N/A'}</td>
+                          </tr>
+                          {assessment.assessment_order?.assigned_by_doctor && (
+                            <>
+                              <tr>
+                                <th className="pt-2">Assigned By:</th>
+                                <td className="pt-2">
+                                  {assessment.assessment_order.assigned_by_doctor.first_name &&
+                                  assessment.assessment_order.assigned_by_doctor.last_name
+                                    ? `${assessment.assessment_order.assigned_by_doctor.first_name} ${assessment.assessment_order.assigned_by_doctor.last_name}`
+                                    : assessment.assessment_order.assigned_by_doctor.full_name || 'N/A'}
+                                </td>
+                              </tr>
+                              {assessment.assessment_order.assigned_by_doctor.practice_name && (
+                                <tr>
+                                  <th>Assigned By Practice:</th>
+                                  <td>{assessment.assessment_order.assigned_by_doctor.practice_name}</td>
+                                </tr>
+                              )}
+                            </>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -236,10 +273,6 @@ export default function AssessmentDetailPage() {
                       <tr>
                         <th style={{ width: '30%' }}>Assessment Type</th>
                         <td>{formatAssessmentType(assessment.assessment_type)}</td>
-                      </tr>
-                      <tr>
-                        <th>Patient</th>
-                        <td>{assessment.patient?.name || 'N/A'}</td>
                       </tr>
                       <tr>
                         <th>Status</th>
@@ -258,6 +291,26 @@ export default function AssessmentDetailPage() {
                           <th>Reviewed On</th>
                           <td>{formatDate(assessment.reviewed_at)}</td>
                         </tr>
+                      )}
+                      {assessment.assessment_order && (
+                        <>
+                          <tr>
+                            <th>Ordered On</th>
+                            <td>{formatDate(assessment.assessment_order.ordered_on)}</td>
+                          </tr>
+                          {assessment.assessment_order.sent_at && (
+                            <tr>
+                              <th>Sent At</th>
+                              <td>{formatDate(assessment.assessment_order.sent_at)}</td>
+                            </tr>
+                          )}
+                          {assessment.assessment_order.instructions && (
+                            <tr>
+                              <th>Instructions</th>
+                              <td>{assessment.assessment_order.instructions}</td>
+                            </tr>
+                          )}
+                        </>
                       )}
                     </tbody>
                   </table>
@@ -358,17 +411,6 @@ export default function AssessmentDetailPage() {
                 </div>
               )}
 
-              {/* Question Responses - Show inline if available */}
-              {assessment.status === 'completed' && assessment.responses && assessment.responses.length > 0 && (
-                <div className="mb-4">
-                  <AssessmentResponses
-                    responses={assessment.responses}
-                    title="Patient Responses"
-                    defaultExpanded={false}
-                  />
-                </div>
-              )}
-
               {/* Recommendations */}
               {recommendation && (
                 <div className="mb-4">
@@ -406,13 +448,9 @@ export default function AssessmentDetailPage() {
 
               {/* Action Buttons */}
               <div className="mt-4 pt-3 border-top">
-                <Link href="/doctor/assessments" className="btn btn-secondary">
+                <Link href="/admin/assessments" className="btn btn-secondary">
                   <i className="mdi mdi-arrow-left me-1"></i>
-                  Back to Assessments
-                </Link>
-                <Link href="/doctor/assessments/ready-for-review" className="btn btn-secondary ms-2">
-                  <i className="mdi mdi-check-circle me-1"></i>
-                  Ready for Review
+                  Back to All Assessments
                 </Link>
               </div>
             </div>
@@ -431,10 +469,12 @@ export default function AssessmentDetailPage() {
           responses={fullAssessment.responses}
           assessment={fullAssessment}
           patientName={assessment.patient?.name}
-          title={`Assessment Responses - ${fullAssessment.assessment_type}`}
+          title={`Assessment Responses - ${formatAssessmentType(fullAssessment.assessment_type)}`}
         />
       )}
-    </PermissionGate>
+    </>
   )
 }
+
+
 

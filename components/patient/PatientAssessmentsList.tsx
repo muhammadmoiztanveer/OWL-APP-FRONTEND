@@ -190,7 +190,7 @@ export default function PatientAssessmentsList() {
                   </div>
 
                   {/* Show responses for completed assessments */}
-                  {assessment.is_completed && assessment.assessment?.responses && assessment.assessment.responses.length > 0 && (
+                  {/* {assessment.is_completed && assessment.assessment?.responses && assessment.assessment.responses.length > 0 && (
                     <div className="mt-3 pt-3 border-top">
                       <AssessmentResponses
                         responses={assessment.assessment.responses}
@@ -198,7 +198,7 @@ export default function PatientAssessmentsList() {
                         defaultExpanded={false}
                       />
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>

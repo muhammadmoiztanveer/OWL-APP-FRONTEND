@@ -4,6 +4,7 @@ export interface ApiResponse<T = any> {
   message?: string
   data?: T
   errors?: Record<string, string[]>
+  impersonating?: boolean // Flag indicating if impersonation is active
 }
 
 // User Types

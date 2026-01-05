@@ -140,6 +140,16 @@ export const doctorApi = {
     return response.data
   },
 
+  getPatientAssessmentResponses: async (
+    patientId: number,
+    assessmentId: number
+  ): Promise<ApiResponse<Assessment>> => {
+    const response = await api.get<ApiResponse<Assessment>>(
+      `/doctor/patients/${patientId}/assessments/${assessmentId}/responses`
+    )
+    return response.data
+  },
+
   markAsReviewed: async (id: number): Promise<ApiResponse<Assessment>> => {
     const response = await api.post<ApiResponse<Assessment>>(`/doctor/assessments/${id}/review`)
     return response.data

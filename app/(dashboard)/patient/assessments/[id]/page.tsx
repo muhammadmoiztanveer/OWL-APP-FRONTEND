@@ -173,10 +173,56 @@ export default function AssessmentDetailPage() {
                           <td>{formatDate(assessment.reviewed_at)}</td>
                         </tr>
                       )}
+                      {assessment.assessment_order && (
+                        <>
+                          <tr>
+                            <th>Ordered On</th>
+                            <td>{formatDate(assessment.assessment_order.ordered_on)}</td>
+                          </tr>
+                          {assessment.assessment_order.sent_at && (
+                            <tr>
+                              <th>Sent At</th>
+                              <td>{formatDate(assessment.assessment_order.sent_at)}</td>
+                            </tr>
+                          )}
+                          {assessment.assessment_order.instructions && (
+                            <tr>
+                              <th>Instructions</th>
+                              <td>{assessment.assessment_order.instructions}</td>
+                            </tr>
+                          )}
+                        </>
+                      )}
                       {assessment.doctor && (
                         <tr>
                           <th>Healthcare Provider</th>
-                          <td>{assessment.doctor.name || assessment.doctor.email}</td>
+                          <td>
+                            {assessment.doctor.first_name && assessment.doctor.last_name
+                              ? `${assessment.doctor.first_name} ${assessment.doctor.last_name}`
+                              : assessment.doctor.full_name || assessment.doctor.name || assessment.doctor.email || 'N/A'}
+                          </td>
+                        </tr>
+                      )}
+                      {assessment.doctor?.practice_name && (
+                        <tr>
+                          <th>Practice</th>
+                          <td>{assessment.doctor.practice_name}</td>
+                        </tr>
+                      )}
+                      {assessment.assessment_order?.assigned_by_doctor && (
+                        <tr>
+                          <th>Assigned By</th>
+                          <td>
+                            {assessment.assessment_order.assigned_by_doctor.first_name &&
+                            assessment.assessment_order.assigned_by_doctor.last_name
+                              ? `${assessment.assessment_order.assigned_by_doctor.first_name} ${assessment.assessment_order.assigned_by_doctor.last_name}`
+                              : assessment.assessment_order.assigned_by_doctor.full_name || 'N/A'}
+                            {assessment.assessment_order.assigned_by_doctor.practice_name && (
+                              <span className="text-muted ms-2">
+                                ({assessment.assessment_order.assigned_by_doctor.practice_name})
+                              </span>
+                            )}
+                          </td>
                         </tr>
                       )}
                     </tbody>

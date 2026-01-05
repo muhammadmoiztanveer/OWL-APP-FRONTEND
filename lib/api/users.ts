@@ -40,5 +40,10 @@ export const usersApi = {
     const response = await api.post<ApiResponse<UserManagement>>(`/users/${userId}/login-as`)
     return response.data
   },
+
+  stopImpersonation: async (): Promise<ApiResponse<UserManagement>> => {
+    const response = await api.post<ApiResponse<UserManagement>>('/users/stop-impersonation')
+    return response.data
+  },
 }
 

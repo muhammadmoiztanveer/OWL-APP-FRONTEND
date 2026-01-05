@@ -67,7 +67,14 @@ export default function DashboardPage() {
   const shouldShowDoctorDashboard = isImpersonating || (isDoctor && !isAdmin)
 
   // Fetch doctor dashboard stats if showing doctor dashboard
-  const { data: doctorDashboardData, isLoading: doctorLoading, error: doctorError } = useDashboardStats()
+  const { data: doctorDashboardData, isLoading: doctorLoading, error: doctorError, refetch: refetchDoctorStats } = useDashboardStats()
+
+  // Refetch doctor dashboard when impersonation state changes
+  useEffect(() => {
+    if (shouldShowDoctorDashboard) {
+      refetchDoctorStats()
+    }
+  }, [isImpersonating, impersonatingUser?.id, shouldShowDoctorDashboard, refetchDoctorStats])
   
   // Fetch admin dashboard stats if admin
   const { data: adminDashboardData, isLoading: adminLoading } = useAdminDashboard()
@@ -327,7 +334,7 @@ export default function DashboardPage() {
               <div className="d-flex align-items-center">
                 <div className="flex-grow-1">
                   <h4 className="mb-0">
-                    <span data-plugin="counterup">{stats.totalUsers}</span>
+                    <span data-plugin="counterup">{stats.totalDoctors + stats.totalPatients}</span>
                   </h4>
                   <p className="text-muted mb-0">Total Users</p>
                 </div>

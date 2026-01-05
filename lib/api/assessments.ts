@@ -141,7 +141,7 @@ export const assessmentsApi = {
 
   // Patient: Get single assessment by ID (for viewing completed assessment)
   getPatientAssessment: async (id: number): Promise<ApiResponse<Assessment>> => {
-    const response = await api.get<ApiResponse<Assessment>>(`/assessments/${id}`)
+    const response = await api.get<ApiResponse<Assessment>>(`/patient/assessments/${id}`)
     return response.data
   },
 
