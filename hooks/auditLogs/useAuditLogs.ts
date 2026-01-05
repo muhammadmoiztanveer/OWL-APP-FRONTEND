@@ -7,12 +7,16 @@ export function useAuditLogs(params?: AuditLogFilters) {
   return useQuery({
     queryKey: ['audit-logs', params],
     queryFn: async () => {
+      console.log('Fetching audit logs with params:', params)
       const response = await auditLogsApi.listAuditLogs(params)
+      console.log('Audit logs response:', { success: response.success, page: params?.page, meta: response.meta })
       if (!response.success) {
         throw new Error('Failed to fetch audit logs')
       }
       return response
     },
+    staleTime: 0, // Always refetch when query key changes
+    gcTime: 0, // Don't cache results (previously cacheTime)
     onError: (error: any) => {
       const message = error.response?.data?.message || error.message || 'Failed to load audit logs'
       toast.error(message)

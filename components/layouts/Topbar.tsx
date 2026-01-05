@@ -247,7 +247,7 @@ export default function Topbar() {
                   <div className="dropdown-divider"></div>
                   <button
                     className="dropdown-item"
-                    onClick={stopImpersonating}
+                    onClick={() => stopImpersonating().catch(console.error)}
                     style={{ border: 'none', background: 'none', width: '100%', textAlign: 'left' }}
                   >
                     <i className="uil uil-arrow-left font-size-18 align-middle me-1 text-warning"></i>{' '}

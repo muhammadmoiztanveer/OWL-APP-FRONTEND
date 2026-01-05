@@ -7,6 +7,7 @@ import RightSidebar from '@/components/layouts/RightSidebar'
 import Scripts from '@/components/layouts/Scripts'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import FloatingActionButtons from '@/components/doctor/FloatingActionButtons'
+import ImpersonationBanner from '@/components/common/ImpersonationBanner'
 
 export default function DashboardLayout({
   children,
@@ -19,6 +20,7 @@ export default function DashboardLayout({
         <Topbar />
         <Sidebar />
         <div className="main-content">
+          <ImpersonationBanner />
           <div className="page-content">
             <div className="container-fluid">{children}</div>
           </div>

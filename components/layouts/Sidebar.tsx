@@ -52,7 +52,7 @@ export default function Sidebar() {
     }
     
     // Check if we're on Access Control related pages
-    const isOnAdminPage = pathname === '/roles' || pathname === '/permissions' || pathname?.startsWith('/modules') || pathname?.startsWith('/admin/assessment-questions') || pathname?.startsWith('/admin/pdf-queue') || pathname?.startsWith('/admin/audit-logs') || pathname?.startsWith('/admin/settings')
+    const isOnAdminPage = pathname === '/roles' || pathname === '/permissions' || pathname?.startsWith('/modules') || pathname?.startsWith('/admin/assessment-questions') || pathname?.startsWith('/admin/pdf-queue') || pathname?.startsWith('/admin/audit-logs') || pathname?.startsWith('/admin/settings') || pathname?.startsWith('/admin/assessments')
     
     // Check if we're on Billing related pages
     const isOnBillingPage = pathname?.startsWith('/billing') || pathname?.startsWith('/admin/billing') || pathname?.startsWith('/doctor/billing')
@@ -454,6 +454,15 @@ export default function Sidebar() {
                   )}
                   {isAdmin && (
                     <>
+                      <li>
+                        <Link 
+                          href="/admin/assessments" 
+                          className={pathname?.startsWith('/admin/assessments') ? 'mm-active' : ''}
+                        >
+                          <i className="uil-clipboard-alt"></i>
+                          <span>All Assessments</span>
+                        </Link>
+                      </li>
                       <li>
                         <Link 
                           href="/admin/pdf-queue" 

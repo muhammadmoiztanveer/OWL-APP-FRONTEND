@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { doctorApi } from '@/lib/api/doctor'
+import { adminApi } from '@/lib/api/admin'
 import { Assessment } from '@/lib/types'
 import AssessmentResponsesModal from '@/components/assessments/AssessmentResponsesModal'
 import Link from 'next/link'
@@ -9,13 +10,15 @@ import toast from 'react-hot-toast'
 
 interface PatientAssessmentResultsProps {
   patientId: number
+  isAdmin?: boolean
 }
 
-export default function PatientAssessmentResults({ patientId }: PatientAssessmentResultsProps) {
+export default function PatientAssessmentResults({ patientId, isAdmin = false }: PatientAssessmentResultsProps) {
   const [assessments, setAssessments] = useState<Assessment[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null)
   const [showModal, setShowModal] = useState(false)
+  const [loadingResponses, setLoadingResponses] = useState(false)
 
   useEffect(() => {
     fetchAssessments()
@@ -33,6 +36,37 @@ export default function PatientAssessmentResults({ patientId }: PatientAssessmen
       toast.error('Failed to load assessment results')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleViewResponses = async (assessment: Assessment) => {
+    // Use patientId from props (already available in this component)
+    if (!patientId) {
+      console.error('Patient ID not available:', { patientId, assessment })
+      toast.error('Patient information not available')
+      return
+    }
+
+    setLoadingResponses(true)
+    try {
+      let response
+      if (isAdmin) {
+        response = await adminApi.getPatientAssessmentResponses(patientId, assessment.id)
+      } else {
+        response = await doctorApi.getPatientAssessmentResponses(patientId, assessment.id)
+      }
+
+      if (response.success && response.data) {
+        setSelectedAssessment(response.data)
+        setShowModal(true)
+      } else {
+        toast.error('Failed to load assessment responses')
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch assessment responses:', error)
+      toast.error(error.message || 'Failed to load assessment responses')
+    } finally {
+      setLoadingResponses(false)
     }
   }
 
@@ -148,7 +182,7 @@ export default function PatientAssessmentResults({ patientId }: PatientAssessmen
                     )}
                   </div>
 
-                  <div className="mt-3">
+                  <div className="mt-3 d-flex gap-2">
                     <Link
                       href={`/doctor/assessments/${assessment.id}`}
                       className="btn btn-sm btn-outline-primary"
@@ -156,27 +190,27 @@ export default function PatientAssessmentResults({ patientId }: PatientAssessmen
                       <i className="mdi mdi-eye me-1"></i>
                       View Details
                     </Link>
+                    {(assessment.status === 'completed' || assessment.status === 'reviewed') && (
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-primary"
+                        onClick={() => handleViewResponses(assessment)}
+                        disabled={loadingResponses}
+                      >
+                        {loadingResponses ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            Loading...
+                          </>
+                        ) : (
+                          <>
+                            <i className="mdi mdi-clipboard-text-outline me-1"></i>
+                            View Responses
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
-
-                  {/* Show responses if available */}
-                  {assessment.responses && assessment.responses.length > 0 && (
-                    <div className="mt-3 pt-3 border-top">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <h6 className="mb-0">Patient Answers</h6>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-primary"
-                          onClick={() => {
-                            setSelectedAssessment(assessment)
-                            setShowModal(true)
-                          }}
-                        >
-                          <i className="mdi mdi-chevron-down me-1"></i>
-                          Show ({assessment.responses.length})
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -185,7 +219,7 @@ export default function PatientAssessmentResults({ patientId }: PatientAssessmen
       )}
 
       {/* Assessment Responses Modal */}
-      {selectedAssessment && selectedAssessment.responses && (
+      {selectedAssessment && selectedAssessment.responses && selectedAssessment.responses.length > 0 && (
         <AssessmentResponsesModal
           show={showModal}
           onClose={() => {
@@ -193,7 +227,8 @@ export default function PatientAssessmentResults({ patientId }: PatientAssessmen
             setSelectedAssessment(null)
           }}
           responses={selectedAssessment.responses}
-          title={`Patient Answers - ${selectedAssessment.assessment_type}`}
+          assessment={selectedAssessment}
+          title={`Assessment Responses - ${selectedAssessment.assessment_type}`}
         />
       )}
     </div>

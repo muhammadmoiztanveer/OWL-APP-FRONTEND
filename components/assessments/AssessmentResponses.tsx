@@ -85,10 +85,11 @@ export default function AssessmentResponses({
                   bgColor: 'bg-secondary-subtle',
                 }
 
-                // Get question text - backend returns it nested in question.text
-                // Priority: question.text (nested) > question_text (flat) > fallback
+                // Get question text - backend returns it nested in question.text or question.question_text
+                // Priority: question.text (nested) > question.question_text (nested alt) > question_text (flat) > fallback
                 const questionText = 
                   (response.question?.text && response.question.text.trim()) ||
+                  ((response.question as any)?.question_text && (response.question as any).question_text.trim()) ||
                   (response.question_text && response.question_text.trim()) ||
                   null
 
@@ -105,8 +106,12 @@ export default function AssessmentResponses({
                     question_order: questionOrder,
                     has_question_object: !!response.question,
                     question_object: response.question,
+                    question_text_flat: response.question_text,
+                    all_properties: Object.keys(response),
                     response: response,
                   })
+                  // Log the full response structure to help debug
+                  console.log('Full response structure:', JSON.stringify(response, null, 2))
                 }
 
                 // Final fallback - show generic label only if no question text found
