@@ -41,6 +41,8 @@ export default function AuditLogDetailPage() {
   const router = useRouter()
   const { isAdmin } = usePermissions()
   const auditLogId = parseInt(params.id as string)
+  const { data: log, isLoading, error } = useAuditLog(auditLogId)
+  const logData = log as any
 
   // Check if user is admin
   if (!isAdmin) {
@@ -51,8 +53,6 @@ export default function AuditLogDetailPage() {
       </>
     )
   }
-
-  const { data: log, isLoading, error } = useAuditLog(auditLogId)
 
   if (isLoading) {
     return (
@@ -79,7 +79,7 @@ export default function AuditLogDetailPage() {
           <div className="col-12">
             <div className="alert alert-danger">
               <i className="mdi mdi-alert-circle me-2"></i>
-              Failed to load audit log. It may not exist or you may not have permission to view it.
+              Failed to load audit logData. It may not exist or you may not have permission to view it.
             </div>
             <Link href="/admin/audit-logs" className="btn btn-outline-primary">
               <i className="mdi mdi-arrow-left me-1"></i> Back to Audit Logs
@@ -91,17 +91,17 @@ export default function AuditLogDetailPage() {
   }
 
   const getResourceLink = () => {
-    if (!log.resource_type || !log.resource_id) return null
+    if (!logData.resource_type || !logData.resource_id) return null
 
     const resourceRoutes: Record<string, string> = {
-      Patient: `/doctor/patients/${log.resource_id}`,
-      Assessment: `/doctor/assessments/${log.resource_id}`,
-      Invoice: `/billing/invoices/${log.resource_id}`,
+      Patient: `/doctor/patients/${logData.resource_id}`,
+      Assessment: `/doctor/assessments/${logData.resource_id}`,
+      Invoice: `/billing/invoices/${logData.resource_id}`,
       Payment: `/billing/payments`,
-      User: `/users/${log.resource_id}`,
+      User: `/users/${logData.resource_id}`,
     }
 
-    return resourceRoutes[log.resource_type] || null
+    return resourceRoutes[logData.resource_type] || null
   }
 
   const resourceLink = getResourceLink()
@@ -129,12 +129,12 @@ export default function AuditLogDetailPage() {
               <div className="row mb-3">
                 <div className="col-md-6">
                   <label className="form-label text-muted">Timestamp</label>
-                  <div className="fw-medium">{formatDateTime(log.created_at)}</div>
+                  <div className="fw-medium">{formatDateTime(logData.created_at)}</div>
                 </div>
                 <div className="col-md-6">
                   <label className="form-label text-muted">Status</label>
                   <div>
-                    <AuditLogStatusBadge status={log.status} />
+                    <AuditLogStatusBadge status={logData.status} />
                   </div>
                 </div>
               </div>
@@ -142,7 +142,7 @@ export default function AuditLogDetailPage() {
                 <div className="col-md-6">
                   <label className="form-label text-muted">User</label>
                   <div>
-                    {log.user ? (
+                    {logData.user ? (
                       <div className="d-flex align-items-center">
                         <div
                           className="avatar-xs me-2"
@@ -159,11 +159,11 @@ export default function AuditLogDetailPage() {
                             fontWeight: 'bold',
                           }}
                         >
-                          {getUserInitials(log.user.name)}
+                          {getUserInitials(logData.user.name)}
                         </div>
                         <div>
-                          <div className="fw-medium">{log.user.name}</div>
-                          <small className="text-muted">{log.user.email}</small>
+                          <div className="fw-medium">{logData.user.name}</div>
+                          <small className="text-muted">{logData.user.email}</small>
                         </div>
                       </div>
                     ) : (
@@ -174,18 +174,18 @@ export default function AuditLogDetailPage() {
                 <div className="col-md-6">
                   <label className="form-label text-muted">Action</label>
                   <div>
-                    <ActionBadge action={log.action} />
-                    {log.action_label && (
-                      <div className="text-muted small mt-1">{log.action_label}</div>
+                    <ActionBadge action={logData.action} />
+                    {logData.action_label && (
+                      <div className="text-muted small mt-1">{logData.action_label}</div>
                     )}
                   </div>
                 </div>
               </div>
-              {log.description && (
+              {logData.description && (
                 <div className="row mb-3">
                   <div className="col-12">
                     <label className="form-label text-muted">Description</label>
-                    <div>{log.description}</div>
+                    <div>{logData.description}</div>
                   </div>
                 </div>
               )}
@@ -199,18 +199,18 @@ export default function AuditLogDetailPage() {
               <div className="row mb-3">
                 <div className="col-md-6">
                   <label className="form-label text-muted">Resource Type</label>
-                  <div className="fw-medium">{log.resource_type || '-'}</div>
+                  <div className="fw-medium">{logData.resource_type || '-'}</div>
                 </div>
                 <div className="col-md-6">
                   <label className="form-label text-muted">Resource ID</label>
-                  <div className="fw-medium">{log.resource_id || '-'}</div>
+                  <div className="fw-medium">{logData.resource_id || '-'}</div>
                 </div>
               </div>
-              {log.resource_identifier && (
+              {logData.resource_identifier && (
                 <div className="row mb-3">
                   <div className="col-12">
                     <label className="form-label text-muted">Resource Identifier</label>
-                    <div className="fw-medium">{log.resource_identifier}</div>
+                    <div className="fw-medium">{logData.resource_identifier}</div>
                   </div>
                 </div>
               )}
@@ -218,7 +218,7 @@ export default function AuditLogDetailPage() {
                 <div className="col-12">
                   <label className="form-label text-muted">PHI Access</label>
                   <div>
-                    <PhiAccessBadge isPhiAccess={log.is_phi_access} />
+                    <PhiAccessBadge isPhiAccess={logData.is_phi_access} />
                   </div>
                 </div>
               </div>
@@ -242,20 +242,20 @@ export default function AuditLogDetailPage() {
                 <div className="col-md-6">
                   <label className="form-label text-muted">HTTP Method</label>
                   <div>
-                    <span className="badge bg-info-subtle text-info">{log.http_method || '-'}</span>
+                    <span className="badge bg-info-subtle text-info">{logData.http_method || '-'}</span>
                   </div>
                 </div>
                 <div className="col-md-6">
                   <label className="form-label text-muted">Route</label>
-                  <div className="fw-medium">{log.route || '-'}</div>
+                  <div className="fw-medium">{logData.route || '-'}</div>
                 </div>
               </div>
-              {log.endpoint && (
+              {logData.endpoint && (
                 <div className="row mb-3">
                   <div className="col-12">
                     <label className="form-label text-muted">Endpoint</label>
                     <div>
-                      <code className="text-muted">{log.endpoint}</code>
+                      <code className="text-muted">{logData.endpoint}</code>
                     </div>
                   </div>
                 </div>
@@ -264,14 +264,14 @@ export default function AuditLogDetailPage() {
           </div>
 
           {/* Error Information */}
-          {log.status !== 'success' && log.error_message && (
+          {logData.status !== 'success' && logData.error_message && (
             <div className="card mt-3 border-danger">
               <div className="card-body">
                 <h5 className="card-title mb-4 text-danger">Error Information</h5>
                 <div className="alert alert-danger mb-0">
                   <strong>Error Message:</strong>
                   <pre className="mb-0 mt-2" style={{ whiteSpace: 'pre-wrap' }}>
-                    {log.error_message}
+                    {logData.error_message}
                   </pre>
                 </div>
               </div>
@@ -288,36 +288,36 @@ export default function AuditLogDetailPage() {
               <div className="mb-3">
                 <label className="form-label text-muted">IP Address</label>
                 <div>
-                  <code className="text-muted">{log.ip_address || '-'}</code>
+                  <code className="text-muted">{logData.ip_address || '-'}</code>
                 </div>
               </div>
               <div className="mb-3">
                 <label className="form-label text-muted">Device Type</label>
-                <div className="fw-medium text-capitalize">{log.device_type || '-'}</div>
+                <div className="fw-medium text-capitalize">{logData.device_type || '-'}</div>
               </div>
               <div className="mb-3">
                 <label className="form-label text-muted">Browser</label>
-                <div className="fw-medium">{log.browser || '-'}</div>
+                <div className="fw-medium">{logData.browser || '-'}</div>
               </div>
               <div className="mb-3">
                 <label className="form-label text-muted">Platform</label>
-                <div className="fw-medium">{log.platform || '-'}</div>
+                <div className="fw-medium">{logData.platform || '-'}</div>
               </div>
-              {log.user_agent && (
+              {logData.user_agent && (
                 <div className="mb-3">
                   <label className="form-label text-muted">User Agent</label>
                   <div>
                     <code className="text-muted small" style={{ wordBreak: 'break-all' }}>
-                      {log.user_agent}
+                      {logData.user_agent}
                     </code>
                   </div>
                 </div>
               )}
-              {log.session_id && (
+              {logData.session_id && (
                 <div className="mb-3">
                   <label className="form-label text-muted">Session ID</label>
                   <div>
-                    <code className="text-muted small">{log.session_id}</code>
+                    <code className="text-muted small">{logData.session_id}</code>
                   </div>
                 </div>
               )}
@@ -325,7 +325,7 @@ export default function AuditLogDetailPage() {
           </div>
 
           {/* Metadata */}
-          {log.metadata && Object.keys(log.metadata).length > 0 && (
+          {logData.metadata && Object.keys(logData.metadata).length > 0 && (
             <div className="card mt-3">
               <div className="card-body">
                 <h5 className="card-title mb-4">Metadata</h5>
@@ -339,7 +339,7 @@ export default function AuditLogDetailPage() {
                     wordBreak: 'break-word',
                   }}
                 >
-                  {JSON.stringify(log.metadata, null, 2)}
+                  {JSON.stringify(logData.metadata, null, 2)}
                 </pre>
               </div>
             </div>

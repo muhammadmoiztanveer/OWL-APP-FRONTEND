@@ -198,6 +198,12 @@ export interface PaginationLinks {
   links: PaginationLink[]
 }
 
+export interface PaginatedResponse<T> {
+  data: T[]
+  meta: PaginationMeta
+  links: PaginationLinks
+}
+
 export interface DoctorsListParams {
   per_page?: number
   page?: number

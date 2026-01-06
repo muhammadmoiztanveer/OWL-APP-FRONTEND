@@ -20,10 +20,6 @@ export function useInvoices(params?: InvoicesListParams) {
       }
       return response
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load invoices'
-      toast.error(message)
-    },
   })
 }
 
@@ -36,10 +32,6 @@ export function useInvoiceStats() {
         throw new Error(response.message || 'Failed to fetch invoice statistics')
       }
       return response.data
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load statistics'
-      toast.error(message)
     },
   })
 }
@@ -55,10 +47,6 @@ export function useInvoice(id: number) {
       return response.data
     },
     enabled: !!id,
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load invoice'
-      toast.error(message)
-    },
   })
 }
 
@@ -77,14 +65,6 @@ export function useCreateInvoice() {
       queryClient.invalidateQueries({ queryKey: ['billing-invoices'] })
       queryClient.invalidateQueries({ queryKey: ['billing-invoice-stats'] })
       toast.success('Invoice created successfully')
-    },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        Object.values(error.response?.data?.errors || {}).flat()[0] ||
-        error.message ||
-        'Failed to create invoice'
-      toast.error(message)
     },
   })
 }
@@ -111,14 +91,6 @@ export function useCreateInvoiceFromAssessment() {
       queryClient.invalidateQueries({ queryKey: ['billing-invoice-stats'] })
       toast.success('Invoice created successfully')
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        Object.values(error.response?.data?.errors || {}).flat()[0] ||
-        error.message ||
-        'Failed to create invoice'
-      toast.error(message)
-    },
   })
 }
 
@@ -139,14 +111,6 @@ export function useUpdateInvoice() {
       queryClient.invalidateQueries({ queryKey: ['billing-invoice-stats'] })
       toast.success('Invoice updated successfully')
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        Object.values(error.response?.data?.errors || {}).flat()[0] ||
-        error.message ||
-        'Failed to update invoice'
-      toast.error(message)
-    },
   })
 }
 
@@ -165,10 +129,6 @@ export function useDeleteInvoice() {
       queryClient.invalidateQueries({ queryKey: ['billing-invoices'] })
       queryClient.invalidateQueries({ queryKey: ['billing-invoice-stats'] })
       toast.success('Invoice deleted successfully')
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to delete invoice'
-      toast.error(message)
     },
   })
 }
@@ -189,10 +149,6 @@ export function useMarkInvoiceAsPaid() {
       queryClient.invalidateQueries({ queryKey: ['billing-invoice', id] })
       queryClient.invalidateQueries({ queryKey: ['billing-invoice-stats'] })
       toast.success('Invoice marked as paid')
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to mark invoice as paid'
-      toast.error(message)
     },
   })
 }

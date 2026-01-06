@@ -61,7 +61,7 @@ export default function CreateAssessmentOrderModal({
 
   if (!show) return null
 
-  const patients = patientsData?.data || []
+  const patients = (patientsData as any)?.data || []
 
   return (
     <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -93,7 +93,7 @@ export default function CreateAssessmentOrderModal({
                   disabled={loadingPatients || createMutation.isPending}
                 >
                   <option value="">-- Select Patient --</option>
-                  {patients.map((patient) => (
+                  {patients.map((patient: any) => (
                     <option key={patient.id} value={patient.id}>
                       {patient.name} ({patient.email})
                     </option>

@@ -37,10 +37,11 @@ export default function SubscriptionInvoicesPage() {
   const { data: invoicesData, isLoading, refetch } = useSubscriptionInvoices({
     page: currentPage,
     per_page: 15,
-    status: statusFilter || undefined,
+    status: (statusFilter && statusFilter !== '' ? statusFilter as 'pending' | 'paid' | 'overdue' | 'cancelled' : undefined),
     start_date: startDate || undefined,
     end_date: endDate || undefined,
   })
+  const invoicesDataTyped = invoicesData as any
   const generateMutation = useGenerateMonthlyInvoices()
   const sendEmailMutation = useSendInvoiceEmail()
   const markPaidMutation = useMarkInvoiceAsPaid()
@@ -187,7 +188,7 @@ export default function SubscriptionInvoicesPage() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-              ) : invoicesData?.data && invoicesData.data.length > 0 ? (
+              ) : invoicesDataTyped?.data && Array.isArray(invoicesDataTyped.data) && invoicesDataTyped.data.length > 0 ? (
                 <>
                   <div className="table-responsive">
                     <table className="table table-striped table-bordered">
@@ -204,7 +205,7 @@ export default function SubscriptionInvoicesPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {invoicesData.data.map((invoice: BillingInvoice) => (
+                        {invoicesDataTyped.data.map((invoice: BillingInvoice) => (
                           <tr key={invoice.id}>
                             <td>
                               <Link href={`/admin/billing/subscription-invoices/${invoice.id}`}>
@@ -270,10 +271,10 @@ export default function SubscriptionInvoicesPage() {
                       </tbody>
                     </table>
                   </div>
-                  {invoicesData.meta && (
+                  {invoicesDataTyped?.meta && invoicesDataTyped?.links && (
                     <Pagination
-                      currentPage={currentPage}
-                      totalPages={invoicesData.meta.last_page}
+                      meta={invoicesDataTyped.meta}
+                      links={invoicesDataTyped.links}
                       onPageChange={setCurrentPage}
                     />
                   )}

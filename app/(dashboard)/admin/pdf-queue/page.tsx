@@ -58,9 +58,10 @@ export default function PdfQueuePage() {
   const { data, isLoading, error } = usePdfQueue({
     page: currentPage,
     per_page: 15,
-    status: statusFilter === 'all' ? undefined : (statusFilter as any),
     search: searchTerm || undefined,
+    status: (statusFilter !== 'all' && statusFilter ? statusFilter as 'pending' | 'completed' | 'failed' | 'processing' : undefined),
   })
+  const dataTyped = data as any
 
   const retryMutation = useRetryPdfGeneration()
 
@@ -146,7 +147,7 @@ export default function PdfQueuePage() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-              ) : data && data.data && data.data.length > 0 ? (
+              ) : dataTyped && dataTyped.data && Array.isArray(dataTyped.data) && dataTyped.data.length > 0 ? (
                 <>
                   <div className="table-responsive">
                     <table className="table table-striped table-nowrap align-middle mb-0">
@@ -164,7 +165,7 @@ export default function PdfQueuePage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.data.map((item: PdfQueueItem) => (
+                        {dataTyped.data.map((item: PdfQueueItem) => (
                           <tr key={item.id}>
                             <td>#{item.id}</td>
                             <td>
@@ -225,11 +226,11 @@ export default function PdfQueuePage() {
                   </div>
 
                   {/* Pagination */}
-                  {data.meta && data.links && (
+                  {dataTyped.meta && dataTyped.links && (
                     <div className="mt-3">
                       <Pagination
-                        meta={data.meta}
-                        links={data.links}
+                        meta={dataTyped.meta}
+                        links={dataTyped.links}
                         onPageChange={setCurrentPage}
                       />
                     </div>

@@ -7,7 +7,8 @@ import PatientFormModal from './PatientFormModal'
 import CreateAssessmentOrderModal from './CreateAssessmentOrderModal'
 
 export default function FloatingActionButtons() {
-  const { hasPermission, isImpersonating } = usePermissions()
+  const { hasPermission } = usePermissions()
+  const isImpersonating = false // TODO: Implement impersonation check
   const { user } = useAuth()
   const [showPatientModal, setShowPatientModal] = useState(false)
   const [showAssessmentOrderModal, setShowAssessmentOrderModal] = useState(false)

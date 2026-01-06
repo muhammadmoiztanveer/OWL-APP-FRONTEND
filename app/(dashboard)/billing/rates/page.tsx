@@ -52,9 +52,10 @@ export default function RatesPage() {
     page: currentPage,
     per_page: 15,
     search: searchTerm || undefined,
-    assessment_type: typeFilter || undefined,
+    assessment_type: (typeFilter && typeFilter !== '' ? typeFilter as 'PHQ-9' | 'GAD-7' | 'comprehensive' : undefined),
     is_active: activeFilter === '' ? undefined : activeFilter === 'true',
   })
+  const dataTyped = data as any
 
   const handleSearch = (value: string) => {
     setSearchTerm(value)
@@ -158,7 +159,7 @@ export default function RatesPage() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-              ) : data && data.data && data.data.length > 0 ? (
+              ) : data && (dataTyped as any).data && (dataTyped as any).data.length > 0 ? (
                 <>
                   <div className="table-responsive">
                     <table className="table table-striped table-nowrap align-middle mb-0">
@@ -174,7 +175,7 @@ export default function RatesPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.data.map((rate: Rate) => (
+                        {(dataTyped as any).data.map((rate: Rate) => (
                           <tr key={rate.id}>
                             <td>
                               <span className="badge bg-info-subtle text-info">
@@ -191,7 +192,7 @@ export default function RatesPage() {
                               )}
                             </td>
                             <td>{formatDate(rate.effective_from)}</td>
-                            <td>{formatDate(rate.effective_to)}</td>
+                            <td>{formatDate(rate.effective_to || undefined)}</td>
                             <td>
                               <div className="d-flex gap-2">
                                 <button
@@ -218,11 +219,11 @@ export default function RatesPage() {
                   </div>
 
                   {/* Pagination */}
-                  {data.meta && data.links && (
+                  {(dataTyped as any).meta && (dataTyped as any).links && (
                     <div className="mt-3">
                       <Pagination
-                        meta={data.meta}
-                        links={data.links}
+                        meta={(dataTyped as any).meta}
+                        links={(dataTyped as any).links}
                         onPageChange={setCurrentPage}
                       />
                     </div>

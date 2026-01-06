@@ -73,7 +73,7 @@ export default function RequestPatientAccess({
       <div className="card-body">
         {patientName && (
           <p className="text-muted mb-3">
-            Request access to <strong>{patientName}</strong>'s records
+            Request access to <strong>{patientName}</strong>&apos;s records
           </p>
         )}
 

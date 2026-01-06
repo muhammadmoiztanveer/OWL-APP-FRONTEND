@@ -14,15 +14,6 @@ export function usePatientAssessments() {
       }
       return response.data || []
     },
-    onError: (error: any) => {
-      // Don't show error for 404 - endpoint might not be implemented yet
-      if (error.response?.status === 404) {
-        console.warn('Assessment endpoint not found - backend may not be implemented yet')
-        return
-      }
-      const message = error.response?.data?.message || error.message || 'Failed to load assessments'
-      toast.error(message)
-    },
   })
 }
 
@@ -37,10 +28,6 @@ export function usePatientAssessment(id: number) {
       return response.data
     },
     enabled: !!id,
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load assessment'
-      toast.error(message)
-    },
   })
 }
 

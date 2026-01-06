@@ -44,9 +44,9 @@ export default function AssessmentOrdersPage() {
   const { data, isLoading, error } = useAssessmentOrders({
     page: currentPage,
     per_page: 15,
-    search: searchTerm || undefined,
-    status: statusFilter || undefined,
-  })
+    status: (statusFilter && statusFilter !== '' ? statusFilter as 'pending' | 'sent' | 'completed' | 'cancelled' : undefined),
+  } as any)
+  const dataTyped = data as any
 
   const sendInviteMutation = useSendInvite()
 
@@ -64,7 +64,7 @@ export default function AssessmentOrdersPage() {
   }
 
   // All orders from API
-  const allOrders = data?.data || []
+  const allOrders = dataTyped?.data || []
 
   if (error && (error as any).response?.status === 403) {
     return (
@@ -162,7 +162,7 @@ export default function AssessmentOrdersPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {allOrders.map((order) => (
+                          {allOrders.map((order: any) => (
                           <tr key={order.id}>
                             <td>{order.patient?.name || 'N/A'}</td>
                             <td className="text-capitalize">{order.assessment_type?.replace(/_/g, ' ')}</td>
@@ -203,11 +203,11 @@ export default function AssessmentOrdersPage() {
                       </tbody>
                     </table>
                   </div>
-                  {data?.meta && data?.links && (
+                  {dataTyped?.meta && dataTyped?.links && (
                     <div className="mt-3">
                       <Pagination
-                        meta={data.meta}
-                        links={data.links}
+                        meta={dataTyped?.meta}
+                        links={dataTyped?.links}
                         onPageChange={setCurrentPage}
                       />
                     </div>

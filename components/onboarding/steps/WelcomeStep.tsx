@@ -10,7 +10,7 @@ export default function WelcomeStep({ onSubmit }: WelcomeStepProps) {
       <div className="mb-4">
         <h2 className="mb-3">Welcome to Our Platform!</h2>
         <p className="text-muted mb-4">
-          We're excited to have you here. Let's get started by completing your profile.
+          We&apos;re excited to have you here. Let&apos;s get started by completing your profile.
         </p>
         <p className="text-muted">This will only take a few minutes.</p>
       </div>

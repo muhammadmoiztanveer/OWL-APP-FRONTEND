@@ -14,6 +14,11 @@ export default function AuditLogStatsPage() {
   const { isAdmin } = usePermissions()
   const [startDate, setStartDate] = useState<string>('')
   const [endDate, setEndDate] = useState<string>('')
+  const { data: stats, isLoading, error, refetch } = useAuditLogStats({
+    start_date: startDate || undefined,
+    end_date: endDate || undefined,
+  })
+  const statsData = stats as any
 
   // Check if user is admin
   if (!isAdmin) {
@@ -24,11 +29,6 @@ export default function AuditLogStatsPage() {
       </>
     )
   }
-
-  const { data: stats, isLoading, error, refetch } = useAuditLogStats({
-    start_date: startDate || undefined,
-    end_date: endDate || undefined,
-  })
 
   const handleDateChange = () => {
     refetch()
@@ -45,7 +45,7 @@ export default function AuditLogStatsPage() {
     chart: {
       type: 'pie' as const,
     },
-    labels: stats ? Object.keys(stats.by_action) : [],
+    labels: statsData ? Object.keys(statsData.by_action) : [],
     title: {
       text: 'Actions Distribution',
     },
@@ -54,7 +54,7 @@ export default function AuditLogStatsPage() {
     },
   }
 
-  const actionChartSeries = stats ? Object.values(stats.by_action) : []
+  const actionChartSeries: number[] = statsData ? Object.values(statsData.by_action) : []
 
   const resourceChartOptions = {
     chart: {
@@ -66,17 +66,17 @@ export default function AuditLogStatsPage() {
       },
     },
     xaxis: {
-      categories: stats ? Object.keys(stats.by_resource_type) : [],
+      categories: statsData ? Object.keys(statsData.by_resource_type) : [],
     },
     title: {
       text: 'Resource Types Distribution',
     },
   }
 
-  const resourceChartSeries = [
+  const resourceChartSeries: Array<{ name: string; data: number[] }> = [
     {
       name: 'Count',
-      data: stats ? Object.values(stats.by_resource_type) : [],
+      data: statsData ? Object.values(statsData.by_resource_type) as number[] : [],
     },
   ]
 
@@ -84,7 +84,7 @@ export default function AuditLogStatsPage() {
     chart: {
       type: 'pie' as const,
     },
-    labels: stats ? Object.keys(stats.by_status) : [],
+    labels: statsData ? Object.keys(statsData.by_status) : [],
     title: {
       text: 'Status Distribution',
     },
@@ -94,10 +94,10 @@ export default function AuditLogStatsPage() {
     colors: ['#10b981', '#ef4444', '#f59e0b'], // green, red, orange
   }
 
-  const statusChartSeries = stats ? Object.values(stats.by_status) : []
+  const statusChartSeries: number[] = statsData ? Object.values(statsData.by_status) : []
 
   const successRate = stats
-    ? ((stats.by_status.success || 0) / stats.total_logs) * 100
+    ? ((statsData.by_status.success || 0) / statsData.total_logs) * 100
     : 0
 
   return (
@@ -181,7 +181,7 @@ export default function AuditLogStatsPage() {
                 <div className="card-body">
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
-                      <h4 className="mb-0">{stats?.total_logs?.toLocaleString() || 0}</h4>
+                      <h4 className="mb-0">{statsData?.total_logs?.toLocaleString() || 0}</h4>
                       <p className="text-muted mb-0">Total Logs</p>
                     </div>
                     <div className="avatar-sm">
@@ -199,7 +199,7 @@ export default function AuditLogStatsPage() {
                 <div className="card-body">
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
-                      <h4 className="mb-0">{stats?.phi_access_logs?.toLocaleString() || 0}</h4>
+                      <h4 className="mb-0">{statsData?.phi_access_logs?.toLocaleString() || 0}</h4>
                       <p className="text-muted mb-0">PHI Access Logs</p>
                     </div>
                     <div className="avatar-sm">
@@ -236,7 +236,7 @@ export default function AuditLogStatsPage() {
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
                       <h4 className="mb-0">
-                        {(stats?.by_status.failed || 0) + (stats?.by_status.error || 0)}
+                        {(statsData?.by_status.failed || 0) + (statsData?.by_status.error || 0)}
                       </h4>
                       <p className="text-muted mb-0">Failed/Error</p>
                     </div>
@@ -302,7 +302,7 @@ export default function AuditLogStatsPage() {
           </div>
 
           {/* Top Users Table */}
-          {stats && stats.top_users && stats.top_users.length > 0 && (
+          {stats && statsData.top_users && statsData.top_users.length > 0 && (
             <div className="row mt-4">
               <div className="col-12">
                 <div className="card">
@@ -319,7 +319,7 @@ export default function AuditLogStatsPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {stats.top_users.map((item, index) => (
+                          {statsData.top_users.map((item: any, index: number) => (
                             <tr key={item.user_id}>
                               <td>
                                 <span className="badge bg-primary-subtle text-primary">

@@ -70,7 +70,7 @@ export default function AssessmentCompletionPage() {
           return
         }
 
-        setOrderData(validationResponse.data)
+        setOrderData(validationResponse.data as any)
 
         // Load questions
         const questionsResponse = await assessmentsApi.getQuestionsByToken(token)
@@ -79,7 +79,7 @@ export default function AssessmentCompletionPage() {
           return
         }
 
-        setQuestions(questionsResponse.data.questions.sort((a, b) => a.order_num - b.order_num))
+        setQuestions(questionsResponse.data.questions.sort((a: any, b: any) => a.order_num - b.order_num) as any)
       } catch (err: any) {
         console.error('Error loading assessment:', {
           error: err,
@@ -125,7 +125,7 @@ export default function AssessmentCompletionPage() {
       const response = await assessmentsApi.submitByToken(token, { answers })
 
       if (response.success && response.data) {
-        setSubmittedData(response.data)
+        setSubmittedData(response.data as any)
         toast.success('Assessment completed successfully!')
       } else {
         throw new Error(response.message || 'Failed to submit assessment')

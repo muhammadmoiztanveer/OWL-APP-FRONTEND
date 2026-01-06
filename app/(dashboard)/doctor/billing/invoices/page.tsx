@@ -31,8 +31,9 @@ export default function DoctorInvoicesPage() {
   const { data: invoicesData, isLoading } = useSubscriptionInvoices({
     page: currentPage,
     per_page: 15,
-    status: statusFilter || undefined,
+    status: (statusFilter && statusFilter !== '' ? statusFilter as 'pending' | 'paid' | 'overdue' | 'cancelled' : undefined),
   })
+  const invoicesDataTyped = invoicesData as any
 
   return (
     <>
@@ -72,7 +73,7 @@ export default function DoctorInvoicesPage() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-              ) : invoicesData?.data && invoicesData.data.length > 0 ? (
+              ) : (invoicesDataTyped as any)?.data && (invoicesDataTyped as any).data.length > 0 ? (
                 <>
                   <div className="table-responsive">
                     <table className="table table-striped table-bordered">
@@ -87,7 +88,7 @@ export default function DoctorInvoicesPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {invoicesData.data.map((invoice: BillingInvoice) => (
+                        {(invoicesDataTyped as any).data.map((invoice: BillingInvoice) => (
                           <tr key={invoice.id}>
                             <td>
                               <Link href={`/doctor/billing/invoices/${invoice.id}`}>
@@ -130,12 +131,12 @@ export default function DoctorInvoicesPage() {
                       </tbody>
                     </table>
                   </div>
-                  {invoicesData.meta && (
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={invoicesData.meta.last_page}
-                      onPageChange={setCurrentPage}
-                    />
+                  {(invoicesDataTyped as any).meta && (
+                      <Pagination
+                        meta={invoicesDataTyped?.meta}
+                        links={invoicesDataTyped?.links}
+                        onPageChange={setCurrentPage}
+                      />
                   )}
                 </>
               ) : (

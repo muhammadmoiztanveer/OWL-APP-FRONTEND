@@ -53,11 +53,12 @@ export default function PaymentsPage() {
     page: currentPage,
     per_page: 15,
     search: searchTerm || undefined,
-    status: statusFilter || undefined,
-    payment_method: methodFilter || undefined,
+    status: (statusFilter && statusFilter !== '' ? statusFilter as 'pending' | 'completed' | 'failed' | 'refunded' : undefined),
+    payment_method: (methodFilter && methodFilter !== '' ? methodFilter as 'card' | 'cash' | 'bank_transfer' | 'check' | 'other' : undefined),
     start_date: startDate || undefined,
     end_date: endDate || undefined,
   })
+  const dataTyped = data as any
 
   const handleSearch = (value: string) => {
     setSearchTerm(value)
@@ -186,7 +187,7 @@ export default function PaymentsPage() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-              ) : data?.data.length === 0 ? (
+              ) : (dataTyped as any)?.data.length === 0 ? (
                 <div className="text-center py-5">
                   <i className="mdi mdi-cash-multiple font-size-48 text-muted"></i>
                   <p className="text-muted mt-3">No payments found.</p>
@@ -212,7 +213,7 @@ export default function PaymentsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {data?.data.map((payment: Payment) => (
+                        {(dataTyped as any)?.data.map((payment: Payment) => (
                           <tr key={payment.id}>
                             <td>
                               {payment.invoice ? (
@@ -252,11 +253,11 @@ export default function PaymentsPage() {
                       </tbody>
                     </table>
                   </div>
-                  {data?.meta && data?.links && (
+                  {dataTyped?.meta && dataTyped?.links && (
                     <div className="mt-3">
                       <Pagination
-                        meta={data.meta}
-                        links={data.links}
+                        meta={dataTyped.meta}
+                        links={dataTyped.links}
                         onPageChange={setCurrentPage}
                       />
                     </div>

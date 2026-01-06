@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -20,7 +20,7 @@ interface LoginLinkData {
   expires_at: string
 }
 
-export default function PatientPasswordSetupPage() {
+function PatientPasswordSetupContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const token = searchParams.get('token')
@@ -366,5 +366,34 @@ export default function PatientPasswordSetupPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PatientPasswordSetupPage() {
+  return (
+    <Suspense fallback={
+      <div
+        className="account-pages d-flex align-items-center"
+        style={{
+          minHeight: '100vh',
+          background: 'radial-gradient(circle at top right, #22c55e 0, #06b6d4 30%, #6366f1 65%, #0f172a 100%)',
+        }}
+      >
+        <div className="container">
+          <div className="row justify-content-center">
+            <div className="col-lg-10 col-xl-9">
+              <div className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="mt-3 text-white">Loading...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <PatientPasswordSetupContent />
+    </Suspense>
   )
 }

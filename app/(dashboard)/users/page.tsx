@@ -46,6 +46,7 @@ export default function UsersPage() {
     sort_by: sortBy || undefined,
     sort_order: sortOrder,
   })
+  const dataTyped = data as any
   const deleteMutation = useDeleteUser()
 
   const handleSearch = (value: string) => {
@@ -151,7 +152,7 @@ export default function UsersPage() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-              ) : data && data.data && data.data.length > 0 ? (
+              ) : (dataTyped as any) && (dataTyped as any).data && (dataTyped as any).data.length > 0 ? (
                 <>
                   <div className="table-responsive">
                     <table className="table table-striped table-nowrap align-middle mb-0">
@@ -196,7 +197,7 @@ export default function UsersPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.data.map((user: any) => {
+                        {(dataTyped as any).data.map((user: any) => {
                           const isOwnAccount = currentUser?.id === user.id
                           return (
                             <tr key={user.id}>
@@ -208,7 +209,7 @@ export default function UsersPage() {
                               <td>
                                 {user.roles && user.roles.length > 0 ? (
                                   <div className="d-flex flex-wrap gap-1">
-                                    {user.roles.map((role) => (
+                                    {user.roles.map((role: any) => (
                                       <RoleBadge key={role.id} role={role} />
                                     ))}
                                   </div>
@@ -266,11 +267,11 @@ export default function UsersPage() {
                   </div>
 
                   {/* Pagination */}
-                  {data.meta && data.links && (
+                  {(dataTyped as any).meta && (dataTyped as any).links && (
                     <div className="mt-3">
                       <Pagination
-                        meta={data.meta}
-                        links={data.links}
+                        meta={(dataTyped as any).meta}
+                        links={(dataTyped as any).links}
                         onPageChange={setCurrentPage}
                       />
                     </div>

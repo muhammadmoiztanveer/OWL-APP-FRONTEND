@@ -7,6 +7,7 @@ import { useDoctors } from '@/hooks/doctors/useDoctors'
 import { usePatients } from '@/hooks/doctor/usePatients'
 import { Invoice, CreateInvoiceRequest } from '@/lib/types'
 import { useAuth } from '@/contexts/AuthContext'
+import { useIsAdmin } from '@/hooks/useIsAdmin'
 import { useRouter } from 'next/navigation'
 
 interface InvoiceFormModalProps {
@@ -23,7 +24,8 @@ export default function InvoiceFormModal({
   invoice,
 }: InvoiceFormModalProps) {
   const router = useRouter()
-  const { user, isAdmin } = useAuth()
+  const { user } = useAuth()
+  const isAdmin = useIsAdmin()
   const isEditing = !!invoice
 
   const createMutation = useCreateInvoice()
@@ -31,7 +33,9 @@ export default function InvoiceFormModal({
 
   // Fetch doctors (for admin) and patients
   const { data: doctorsData } = useDoctors({ per_page: 1000 })
+  const doctorsDataTyped = doctorsData as any
   const { data: patientsData } = usePatients({ per_page: 1000 })
+  const patientsDataTyped = patientsData as any
 
   const {
     register,
@@ -92,7 +96,7 @@ export default function InvoiceFormModal({
       } else {
         const result = await createMutation.mutateAsync(data)
         onSuccess()
-        router.push(`/billing/invoices/${result.id}`)
+        router.push(`/billing/invoices/${(result as any)?.id || ''}`)
       }
     } catch (error) {
       // Error handled by mutation
@@ -127,7 +131,7 @@ export default function InvoiceFormModal({
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="modal-body">
               {/* Doctor Selection (Admin only) */}
-              {isAdmin && doctorsData && (
+              {isAdmin && doctorsDataTyped && (
                 <div className="mb-3">
                   <label htmlFor="doctor_id" className="form-label">
                     Doctor <span className="text-danger">*</span>
@@ -142,7 +146,7 @@ export default function InvoiceFormModal({
                     disabled={isLoading}
                   >
                     <option value="">-- Select Doctor --</option>
-                    {doctorsData.data.map((doctor) => (
+                    {doctorsDataTyped.data.map((doctor: any) => (
                       <option key={doctor.id} value={doctor.id}>
                         {doctor.first_name} {doctor.last_name} ({doctor.email})
                       </option>
@@ -166,7 +170,7 @@ export default function InvoiceFormModal({
                   disabled={isLoading}
                 >
                   <option value="">-- Select Patient (Optional) --</option>
-                  {patientsData?.data.map((patient) => (
+                  {patientsDataTyped?.data?.map((patient: any) => (
                     <option key={patient.id} value={patient.id}>
                       {patient.name} ({patient.email})
                     </option>

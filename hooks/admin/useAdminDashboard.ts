@@ -127,7 +127,7 @@ export function useAdminDashboard() {
             id: inv.id,
             invoice_number: inv.invoice_number,
             doctor_name: inv.doctor?.name || 'N/A',
-            total: typeof inv.total === 'string' ? inv.total : inv.total.toString(),
+            total: typeof inv.total === 'string' ? inv.total : String((inv as any).total || '0'),
             status: inv.status,
             due_date: inv.due_date,
             created_at: inv.created_at || '',
@@ -142,7 +142,7 @@ export function useAdminDashboard() {
             id: pay.id,
             invoice_number: pay.invoice?.invoice_number || 'N/A',
             doctor_name: pay.invoice?.doctor?.name || 'N/A',
-            amount: typeof pay.amount === 'string' ? pay.amount : pay.amount.toString(),
+            amount: typeof pay.amount === 'string' ? pay.amount : String((pay as any).amount || '0'),
             payment_method: pay.payment_method,
             status: pay.status,
             paid_at: pay.paid_at,
@@ -176,13 +176,6 @@ export function useAdminDashboard() {
       }
     },
     enabled: isAdmin,
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view admin dashboard')
-      } else {
-        console.error('Failed to load admin dashboard:', error)
-      }
-    },
   })
 }
 

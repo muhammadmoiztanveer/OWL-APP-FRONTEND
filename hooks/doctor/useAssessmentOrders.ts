@@ -15,18 +15,11 @@ export function useAssessmentOrders(params?: AssessmentOrdersListParams) {
       }
       const response = await doctorApi.getAssessmentOrders(params)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to fetch assessment orders')
+        throw new Error((response as any).message || 'Failed to fetch assessment orders')
       }
       return response
     },
     enabled: hasPermission('assessment-order.view'),
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view assessment orders')
-      } else {
-        toast.error(error.message || 'Failed to load assessment orders')
-      }
-    },
   })
 }
 
@@ -41,7 +34,7 @@ export function useAssessmentOrder(id: number) {
       }
       const response = await doctorApi.getAssessmentOrder(id)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to fetch assessment order')
+        throw new Error((response as any).message || 'Failed to fetch assessment order')
       }
       return response.data
     },
@@ -60,7 +53,7 @@ export function useCreateAssessmentOrder() {
       }
       const response = await doctorApi.createAssessmentOrder(data)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to create assessment order')
+        throw new Error((response as any).message || 'Failed to create assessment order')
       }
       return response.data
     },
@@ -68,18 +61,6 @@ export function useCreateAssessmentOrder() {
       queryClient.invalidateQueries({ queryKey: ['assessment-orders'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
       toast.success('Assessment order created successfully')
-    },
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to create assessment orders')
-      } else {
-        const message =
-          error.response?.data?.message ||
-          Object.values(error.response?.data?.errors || {}).flat()[0] ||
-          error.message ||
-          'Failed to create assessment order'
-        toast.error(message)
-      }
     },
   })
 }
@@ -95,20 +76,13 @@ export function useSendInvite() {
       }
       const response = await doctorApi.sendInvite(id)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to send invite')
+        throw new Error((response as any).message || 'Failed to send invite')
       }
       return response
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assessment-orders'] })
       toast.success('Invite sent successfully')
-    },
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to send invites')
-      } else {
-        toast.error(error.message || 'Failed to send invite')
-      }
     },
   })
 }
@@ -124,7 +98,7 @@ export function usePendingOrders() {
       }
       const response = await doctorApi.getPendingOrders()
       if (!response.success) {
-        throw new Error(response.message || 'Failed to fetch pending orders')
+        throw new Error((response as any).message || 'Failed to fetch pending orders')
       }
       return response.data
     },

@@ -27,6 +27,7 @@ export default function DoctorInvoiceDetailPage() {
   const invoiceId = parseInt(params.id as string)
 
   const { data: invoice, isLoading } = useSubscriptionInvoice(invoiceId)
+  const invoiceData = invoice as any
 
   if (isLoading) {
     return (
@@ -58,7 +59,7 @@ export default function DoctorInvoiceDetailPage() {
         <div className="col-12">
           <div className="card">
             <div className="card-header d-flex justify-content-between align-items-center">
-              <h4 className="card-title mb-0">Invoice #{invoice.invoice_number}</h4>
+              <h4 className="card-title mb-0">Invoice #{invoiceData.invoice_number}</h4>
               <Link href="/doctor/billing/invoices" className="btn btn-secondary">
                 <i className="mdi mdi-arrow-left me-1"></i>Back to List
               </Link>
@@ -71,16 +72,16 @@ export default function DoctorInvoiceDetailPage() {
                     <tbody>
                       <tr>
                         <td><strong>Invoice Number:</strong></td>
-                        <td>{invoice.invoice_number}</td>
+                        <td>{invoiceData.invoice_number}</td>
                       </tr>
                       <tr>
                         <td><strong>Status:</strong></td>
                         <td>
-                          {invoice.status === 'paid' ? (
+                          {invoiceData.status === 'paid' ? (
                             <span className="badge bg-success-subtle text-success">Paid</span>
-                          ) : invoice.status === 'overdue' ? (
+                          ) : invoiceData.status === 'overdue' ? (
                             <span className="badge bg-danger-subtle text-danger">Overdue</span>
-                          ) : invoice.status === 'cancelled' ? (
+                          ) : invoiceData.status === 'cancelled' ? (
                             <span className="badge bg-secondary-subtle text-secondary">Cancelled</span>
                           ) : (
                             <span className="badge bg-warning-subtle text-warning">Pending</span>
@@ -89,21 +90,21 @@ export default function DoctorInvoiceDetailPage() {
                       </tr>
                       <tr>
                         <td><strong>Invoice Type:</strong></td>
-                        <td className="text-capitalize">{invoice.invoice_type}</td>
+                        <td className="text-capitalize">{invoiceData.invoice_type}</td>
                       </tr>
                       <tr>
                         <td><strong>Due Date:</strong></td>
-                        <td>{formatDate(invoice.due_date)}</td>
+                        <td>{formatDate(invoiceData.due_date)}</td>
                       </tr>
-                      {invoice.billing_period_start && invoice.billing_period_end && (
+                      {invoiceData.billing_period_start && invoiceData.billing_period_end && (
                         <>
                           <tr>
                             <td><strong>Billing Period Start:</strong></td>
-                            <td>{formatDate(invoice.billing_period_start)}</td>
+                            <td>{formatDate(invoiceData.billing_period_start)}</td>
                           </tr>
                           <tr>
                             <td><strong>Billing Period End:</strong></td>
-                            <td>{formatDate(invoice.billing_period_end)}</td>
+                            <td>{formatDate(invoiceData.billing_period_end)}</td>
                           </tr>
                         </>
                       )}
@@ -112,27 +113,27 @@ export default function DoctorInvoiceDetailPage() {
                 </div>
 
                 <div className="col-md-6">
-                  {invoice.subscription && (
+                  {invoiceData.subscription && (
                     <>
                       <h5>Subscription Information</h5>
                       <table className="table table-borderless">
                         <tbody>
                           <tr>
                             <td><strong>Package:</strong></td>
-                            <td>{invoice.subscription.package?.name || 'N/A'}</td>
+                            <td>{invoiceData.subscription.package?.name || 'N/A'}</td>
                           </tr>
                           <tr>
                             <td><strong>Billing Cycle:</strong></td>
-                            <td className="text-capitalize">{invoice.subscription.billing_cycle}</td>
+                            <td className="text-capitalize">{invoiceData.subscription.billing_cycle}</td>
                           </tr>
                           <tr>
                             <td><strong>Status:</strong></td>
                             <td>
-                              {invoice.subscription.status === 'active' ? (
+                              {invoiceData.subscription.status === 'active' ? (
                                 <span className="badge bg-success-subtle text-success">Active</span>
                               ) : (
                                 <span className="badge bg-secondary-subtle text-secondary">
-                                  {invoice.subscription.status}
+                                  {invoiceData.subscription.status}
                                 </span>
                               )}
                             </td>
@@ -151,22 +152,22 @@ export default function DoctorInvoiceDetailPage() {
                     <tbody>
                       <tr>
                         <td><strong>Subtotal:</strong></td>
-                        <td className="text-end">{formatCurrency(invoice.subtotal)}</td>
+                        <td className="text-end">{formatCurrency(invoiceData.subtotal)}</td>
                       </tr>
                       <tr>
                         <td><strong>Tax:</strong></td>
-                        <td className="text-end">{formatCurrency(invoice.tax)}</td>
+                        <td className="text-end">{formatCurrency(invoiceData.tax)}</td>
                       </tr>
-                      {invoice.discount > 0 && (
+                      {invoiceData.discount > 0 && (
                         <tr>
                           <td><strong>Discount:</strong></td>
-                          <td className="text-end text-success">-{formatCurrency(invoice.discount)}</td>
+                          <td className="text-end text-success">-{formatCurrency(invoiceData.discount)}</td>
                         </tr>
                       )}
                       <tr className="table-active">
                         <td><strong>Total:</strong></td>
                         <td className="text-end">
-                          <strong>{formatCurrency(invoice.total)}</strong>
+                          <strong>{formatCurrency(invoiceData.total)}</strong>
                         </td>
                       </tr>
                     </tbody>
@@ -174,9 +175,9 @@ export default function DoctorInvoiceDetailPage() {
                 </div>
               </div>
 
-              {invoice.paid_at && (
+              {invoiceData.paid_at && (
                 <div className="alert alert-success mt-3">
-                  <strong>Paid on:</strong> {formatDate(invoice.paid_at)}
+                  <strong>Paid on:</strong> {formatDate(invoiceData.paid_at)}
                 </div>
               )}
             </div>

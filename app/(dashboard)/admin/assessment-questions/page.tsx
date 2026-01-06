@@ -22,6 +22,9 @@ const ASSESSMENT_TYPES = [
 export default function AssessmentQuestionsPage() {
   const isAdmin = useIsAdmin()
   const hasViewPermission = useHasPermission('assessment-question.view')
+  const hasCreatePermission = useHasPermission('assessment-question.create')
+  const hasUpdatePermission = useHasPermission('assessment-question.update')
+  const hasDeletePermission = useHasPermission('assessment-question.delete')
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('')
@@ -35,7 +38,7 @@ export default function AssessmentQuestionsPage() {
     page: currentPage,
     per_page: 15,
     search: searchTerm || undefined,
-    assessment_type: typeFilter || undefined,
+    assessment_type: (typeFilter && typeFilter !== '' ? typeFilter as 'PHQ-9' | 'GAD-7' | 'comprehensive' : undefined),
   })
 
   const handleSearch = (value: string) => {
@@ -60,10 +63,6 @@ export default function AssessmentQuestionsPage() {
       </>
     )
   }
-
-  const hasCreatePermission = useHasPermission('assessment-question.create')
-  const hasUpdatePermission = useHasPermission('assessment-question.update')
-  const hasDeletePermission = useHasPermission('assessment-question.delete')
 
   return (
     <>
@@ -131,7 +130,7 @@ export default function AssessmentQuestionsPage() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-              ) : data && data.data && data.data.length > 0 ? (
+              ) : (data && (data as any).data && Array.isArray((data as any).data) && (data as any).data.length > 0) ? (
                 <>
                   <div className="table-responsive">
                     <table className="table table-striped table-nowrap align-middle mb-0">
@@ -144,7 +143,7 @@ export default function AssessmentQuestionsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.data.map((question: Question) => (
+                        {(data as any).data.map((question: Question) => (
                           <tr key={question.id}>
                             <td>
                               <span className="badge bg-primary">{question.order_num}</span>
@@ -187,11 +186,11 @@ export default function AssessmentQuestionsPage() {
                   </div>
 
                   {/* Pagination */}
-                  {data.meta && data.links && (
+                  {(data as any).meta && (data as any).links && (
                     <div className="mt-3">
                       <Pagination
-                        meta={data.meta}
-                        links={data.links}
+                        meta={(data as any).meta}
+                        links={(data as any).links}
                         onPageChange={setCurrentPage}
                       />
                     </div>

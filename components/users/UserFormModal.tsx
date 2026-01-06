@@ -15,7 +15,9 @@ interface UserFormModalProps {
 
 export default function UserFormModal({ userId, onClose, onSuccess }: UserFormModalProps) {
   const { data: userData, isLoading: loadingUser } = useUser(userId)
+  const userDataTyped = userData as any
   const { data: rolesData } = useRoles()
+  const rolesDataTyped = rolesData as any
   const updateMutation = useUpdateUser()
   const [showPassword, setShowPassword] = useState(false)
 
@@ -41,11 +43,11 @@ export default function UserFormModal({ userId, onClose, onSuccess }: UserFormMo
   useEffect(() => {
     if (userData) {
       reset({
-        name: userData.name || '',
-        email: userData.email || '',
+        name: userDataTyped.name || '',
+        email: userDataTyped.email || '',
         password: '',
-        account_type: (userData.account_type as any) || undefined,
-        roles: userData.roles?.map((r) => r.name) || [],
+        account_type: (userDataTyped.account_type as any) || undefined,
+        roles: userDataTyped.roles?.map((r: any) => r.name) || [],
       })
     }
   }, [userData, reset])
@@ -173,11 +175,11 @@ export default function UserFormModal({ userId, onClose, onSuccess }: UserFormMo
 
                   <div className="mb-3">
                     <label className="form-label">Roles</label>
-                    {rolesData && rolesData.data && rolesData.data.length > 0 ? (
+                    {rolesDataTyped && rolesDataTyped.data && rolesDataTyped.data.length > 0 ? (
                       <div className="border rounded p-3" style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                        {rolesData.data
-                          .filter((role) => role.name.toLowerCase() !== 'admin')
-                          .map((role) => {
+                        {rolesDataTyped.data
+                          .filter((role: any) => role.name.toLowerCase() !== 'admin')
+                          .map((role: any) => {
                             const isChecked = selectedRoles.includes(role.name)
                             return (
                               <div key={role.id} className="form-check mb-2">

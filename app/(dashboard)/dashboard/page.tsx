@@ -36,6 +36,20 @@ export default function DashboardPage() {
   const { user, refreshProfile, impersonatingUser, isImpersonating, loading: authLoading } = useAuth()
   const isAdmin = useHasRole('admin')
   
+  // ✅ FIXED: Use account_type instead of roles to determine dashboard
+  // When impersonating, show doctor dashboard
+  // Otherwise, check account_type directly (not roles)
+  const isPatient = user?.account_type === 'patient'
+  const isDoctor = user?.account_type === 'doctor'
+  const shouldShowDoctorDashboard = isImpersonating || (isDoctor && !isAdmin)
+
+  // Fetch all hooks at the top (before any conditional returns)
+  const { data: doctorDashboardData, isLoading: doctorLoading, error: doctorError, refetch: refetchDoctorStats } = useDashboardStats()
+  const doctorDashboardDataTyped = doctorDashboardData as any
+  const { data: adminDashboardData, isLoading: adminLoading } = useAdminDashboard()
+  const adminDashboardDataTyped = adminDashboardData as any
+  const { data: invoiceStats } = useInvoiceStats()
+  
   // ✅ NEW: Onboarding is now optional - patients can access dashboard without completing onboarding
   // Removed onboarding guard redirect - patients can always access dashboard
   
@@ -48,26 +62,11 @@ export default function DashboardPage() {
   }, []) // Empty array - only run once on mount
   
   // ✅ NEW: Redirect patients to patient dashboard instead of main dashboard
-  const isPatient = user?.account_type === 'patient'
   useEffect(() => {
     if (isPatient && !authLoading) {
       router.push('/patient/dashboard')
     }
   }, [isPatient, authLoading, router])
-  
-  // Don't render main dashboard for patients (they have their own dashboard)
-  if (isPatient) {
-    return null
-  }
-
-  // ✅ FIXED: Use account_type instead of roles to determine dashboard
-  // When impersonating, show doctor dashboard
-  // Otherwise, check account_type directly (not roles)
-  const isDoctor = user?.account_type === 'doctor'
-  const shouldShowDoctorDashboard = isImpersonating || (isDoctor && !isAdmin)
-
-  // Fetch doctor dashboard stats if showing doctor dashboard
-  const { data: doctorDashboardData, isLoading: doctorLoading, error: doctorError, refetch: refetchDoctorStats } = useDashboardStats()
 
   // Refetch doctor dashboard when impersonation state changes
   useEffect(() => {
@@ -75,10 +74,6 @@ export default function DashboardPage() {
       refetchDoctorStats()
     }
   }, [isImpersonating, impersonatingUser?.id, shouldShowDoctorDashboard, refetchDoctorStats])
-  
-  // Fetch admin dashboard stats if admin
-  const { data: adminDashboardData, isLoading: adminLoading } = useAdminDashboard()
-  const { data: invoiceStats } = useInvoiceStats()
 
   useEffect(() => {
     // Initialize counterup (vanilla JS version)
@@ -147,7 +142,7 @@ export default function DashboardPage() {
               <span className="visually-hidden">Loading...</span>
             </div>
           </div>
-        ) : doctorDashboardData ? (
+        ) : doctorDashboardDataTyped ? (
           <>
             {/* Stats Cards */}
             <div className="row">
@@ -156,7 +151,7 @@ export default function DashboardPage() {
                   <div className="card-body">
                     <div className="d-flex align-items-center">
                       <div className="flex-grow-1">
-                        <h4 className="mb-0">{doctorDashboardData.stats.total_active_patients}</h4>
+                        <h4 className="mb-0">{doctorDashboardDataTyped.stats.total_active_patients}</h4>
                         <p className="text-muted mb-0">Total Active Patients</p>
                       </div>
                       <div className="avatar-sm">
@@ -173,7 +168,7 @@ export default function DashboardPage() {
                   <div className="card-body">
                     <div className="d-flex align-items-center">
                       <div className="flex-grow-1">
-                        <h4 className="mb-0">{doctorDashboardData.stats.total_assessments}</h4>
+                        <h4 className="mb-0">{doctorDashboardDataTyped.stats.total_assessments}</h4>
                         <p className="text-muted mb-0">Total Assessments</p>
                       </div>
                       <div className="avatar-sm">
@@ -190,7 +185,7 @@ export default function DashboardPage() {
                   <div className="card-body">
                     <div className="d-flex align-items-center">
                       <div className="flex-grow-1">
-                        <h4 className="mb-0">{doctorDashboardData.stats.pending_orders}</h4>
+                        <h4 className="mb-0">{doctorDashboardDataTyped.stats.pending_orders}</h4>
                         <p className="text-muted mb-0">Pending Orders</p>
                       </div>
                       <div className="avatar-sm">
@@ -215,7 +210,7 @@ export default function DashboardPage() {
                         View All
                       </Link>
                     </div>
-                    {doctorDashboardData.recent_assessments && doctorDashboardData.recent_assessments.length > 0 ? (
+                    {doctorDashboardDataTyped.recent_assessments && doctorDashboardDataTyped.recent_assessments.length > 0 ? (
                       <div className="table-responsive">
                         <table className="table table-nowrap align-middle mb-0">
                           <thead>
@@ -229,7 +224,7 @@ export default function DashboardPage() {
                             </tr>
                           </thead>
                           <tbody>
-                            {doctorDashboardData.recent_assessments.map((assessment) => (
+                            {doctorDashboardDataTyped.recent_assessments.map((assessment: any) => (
                               <tr key={assessment.id}>
                                 <td>{assessment.patient?.name || 'N/A'}</td>
                                 <td>{assessment.assessment_type}</td>
@@ -287,7 +282,7 @@ export default function DashboardPage() {
     )
   }
 
-  const stats = adminDashboardData || {
+  const stats = adminDashboardDataTyped || {
     totalUsers: 0,
     totalDoctors: 0,
     totalPatients: 0,
@@ -471,7 +466,7 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {stats.recentUsers.map((user) => (
+                      {stats.recentUsers.map((user: any) => (
                         <tr key={user.id}>
                           <td>{user.name}</td>
                           <td>{user.email}</td>
@@ -516,7 +511,7 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {stats.recentDoctors.map((doctor) => (
+                      {stats.recentDoctors.map((doctor: any) => (
                         <tr key={doctor.id}>
                           <td>{`${doctor.first_name} ${doctor.last_name}`}</td>
                           <td>{doctor.email}</td>
@@ -566,7 +561,7 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {stats.recentInvoices.map((invoice) => (
+                      {stats.recentInvoices.map((invoice: any) => (
                         <tr key={invoice.id}>
                           <td>
                             <Link href={`/billing/invoices/${invoice.id}`} className="text-body fw-bold">
@@ -616,7 +611,7 @@ export default function DashboardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {stats.recentPayments.map((payment) => (
+                      {stats.recentPayments.map((payment: any) => (
                         <tr key={payment.id}>
                           <td>{payment.invoice_number}</td>
                           <td>{payment.doctor_name}</td>

@@ -23,6 +23,7 @@ export default function CreateInvoiceFromAssessmentModal({
   const createMutation = useCreateInvoiceFromAssessment()
   const { data: assessment } = useAssessment(assessmentId)
   const { data: activeRates } = useActiveRates()
+  const activeRatesTyped = (activeRates as any) || []
 
   const [selectedRate, setSelectedRate] = useState<number | null>(null)
 
@@ -47,8 +48,8 @@ export default function CreateInvoiceFromAssessmentModal({
   // Find matching rate for assessment type
   useEffect(() => {
     if (assessment && activeRates) {
-      const matchingRate = activeRates.find(
-        (rate) => rate.assessment_type === assessment.assessment_type || rate.assessment_type === 'comprehensive'
+      const matchingRate = activeRatesTyped.find(
+        (rate: any) => rate.assessment_type === assessment.assessment_type || rate.assessment_type === 'comprehensive'
       )
       if (matchingRate) {
         setSelectedRate(matchingRate.id)
@@ -74,7 +75,7 @@ export default function CreateInvoiceFromAssessmentModal({
         data,
       })
       onClose()
-      router.push(`/billing/invoices/${result.id}`)
+      router.push(`/billing/invoices/${(result as any)?.id || ''}`)
     } catch (error) {
       // Error handled by mutation
     }
@@ -84,8 +85,8 @@ export default function CreateInvoiceFromAssessmentModal({
 
   // Calculate total (subtotal comes from rate)
   const calculateTotal = () => {
-    const matchingRate = activeRates?.find(
-      (rate) =>
+    const matchingRate = activeRatesTyped?.find(
+      (rate: any) =>
         rate.assessment_type === assessment?.assessment_type ||
         (assessment?.assessment_type === 'comprehensive' && rate.assessment_type === 'comprehensive')
     )
@@ -97,8 +98,8 @@ export default function CreateInvoiceFromAssessmentModal({
 
   if (!show) return null
 
-  const matchingRate = activeRates?.find(
-    (rate) =>
+  const matchingRate = activeRatesTyped?.find(
+    (rate: any) =>
       rate.assessment_type === assessment?.assessment_type ||
       (assessment?.assessment_type === 'comprehensive' && rate.assessment_type === 'comprehensive')
   )

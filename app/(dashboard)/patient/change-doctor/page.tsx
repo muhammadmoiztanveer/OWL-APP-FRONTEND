@@ -57,7 +57,7 @@ export default function ChangeDoctorPage() {
         }))
         setDoctors(formattedDoctors)
       } else {
-        throw new Error(response.message || 'Failed to load doctors')
+        throw new Error((response as any).message || 'Failed to load doctors')
       }
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to load doctors'

@@ -64,6 +64,7 @@ export default function InvoiceDetailPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(false)
 
   const { data: invoice, isLoading, error, refetch } = useInvoice(id)
+  const invoiceData = invoice as any
   const deleteMutation = useDeleteInvoice()
   const markPaidMutation = useMarkInvoiceAsPaid()
 
@@ -93,7 +94,7 @@ export default function InvoiceDetailPage() {
     return (
       <>
         <Breadcrumb pagetitle="MENTAL HEALTH ASSESSMENT SYSTEM" title="Invoice Details" />
-        <UnauthorizedMessage message="You do not have permission to view this invoice." />
+        <UnauthorizedMessage message="You do not have permission to view this invoiceData." />
       </>
     )
   }
@@ -108,7 +109,7 @@ export default function InvoiceDetailPage() {
               <div className="card-body text-center py-5">
                 <i className="uil-exclamation-octagon font-size-48 text-warning"></i>
                 <h4 className="mt-3 mb-2">Invoice Not Found</h4>
-                <p className="text-muted">The invoice you're looking for doesn't exist or has been removed.</p>
+                <p className="text-muted">The invoice you&apos;re looking for doesn&apos;t exist or has been removed.</p>
                 <Link href="/billing/invoices" className="btn btn-primary mt-3">
                   Back to Invoices
                 </Link>
@@ -152,7 +153,7 @@ export default function InvoiceDetailPage() {
     )
   }
 
-  const balance = invoice.balance !== undefined ? invoice.balance : parseFloat(invoice.total) - (invoice.total_paid || 0)
+  const balance = invoiceData.balance !== undefined ? invoiceData.balance : parseFloat(invoiceData.total) - (invoiceData.total_paid || 0)
   const hasBalance = balance > 0
 
   return (
@@ -166,11 +167,11 @@ export default function InvoiceDetailPage() {
               {/* Invoice Header */}
               <div className="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                 <div>
-                  <h4 className="card-title mb-1">Invoice {invoice.invoice_number}</h4>
-                  <p className="text-muted mb-0">Created: {formatDate(invoice.created_at)}</p>
+                  <h4 className="card-title mb-1">Invoice {invoiceData.invoice_number}</h4>
+                  <p className="text-muted mb-0">Created: {formatDate(invoiceData.created_at)}</p>
                 </div>
                 <div className="text-end">
-                  <InvoiceStatusBadge status={invoice.status} />
+                  <InvoiceStatusBadge status={invoiceData.status} />
                   <div className="mt-2">
                     {canEdit && (
                       <button
@@ -180,7 +181,7 @@ export default function InvoiceDetailPage() {
                         <i className="mdi mdi-pencil me-1"></i> Edit
                       </button>
                     )}
-                    {invoice.status === 'pending' && (
+                    {invoiceData.status === 'pending' && (
                       <button
                         className="btn btn-sm btn-success me-2"
                         onClick={handleMarkAsPaid}
@@ -212,25 +213,25 @@ export default function InvoiceDetailPage() {
               <div className="row mb-4">
                 <div className="col-md-6">
                   <h6 className="mb-3">Bill To</h6>
-                  <p className="mb-1 fw-semibold">{invoice.patient?.name || 'N/A'}</p>
-                  <p className="text-muted mb-0">{invoice.patient?.email || ''}</p>
+                  <p className="mb-1 fw-semibold">{invoiceData.patient?.name || 'N/A'}</p>
+                  <p className="text-muted mb-0">{invoiceData.patient?.email || ''}</p>
                 </div>
                 <div className="col-md-6">
                   <h6 className="mb-3">From</h6>
-                  <p className="mb-1 fw-semibold">{invoice.doctor?.name || 'N/A'}</p>
-                  <p className="text-muted mb-0">{invoice.doctor?.email || ''}</p>
+                  <p className="mb-1 fw-semibold">{invoiceData.doctor?.name || 'N/A'}</p>
+                  <p className="text-muted mb-0">{invoiceData.doctor?.email || ''}</p>
                 </div>
               </div>
 
               {/* Assessment Info */}
-              {invoice.assessment && (
+              {invoiceData.assessment && (
                 <div className="mb-4">
                   <h6 className="mb-2">Related Assessment</h6>
                   <Link
-                    href={`/doctor/assessments/${invoice.assessment.id}`}
+                    href={`/doctor/assessments/${invoiceData.assessment.id}`}
                     className="text-primary"
                   >
-                    {invoice.assessment.assessment_type} - View Assessment
+                    {invoiceData.assessment.assessment_type} - View Assessment
                   </Link>
                 </div>
               )}
@@ -243,16 +244,16 @@ export default function InvoiceDetailPage() {
                     <tbody>
                       <tr>
                         <th style={{ width: '70%' }}>Subtotal</th>
-                        <td className="text-end">{formatCurrency(invoice.subtotal)}</td>
+                        <td className="text-end">{formatCurrency(invoiceData.subtotal)}</td>
                       </tr>
                       <tr>
                         <th>Tax</th>
-                        <td className="text-end">{formatCurrency(invoice.tax)}</td>
+                        <td className="text-end">{formatCurrency(invoiceData.tax)}</td>
                       </tr>
-                      {parseFloat(invoice.discount) > 0 && (
+                      {parseFloat(invoiceData.discount) > 0 && (
                         <tr>
                           <th>Discount</th>
-                          <td className="text-end text-danger">-{formatCurrency(invoice.discount)}</td>
+                          <td className="text-end text-danger">-{formatCurrency(invoiceData.discount)}</td>
                         </tr>
                       )}
                       <tr className="table-active">
@@ -260,7 +261,7 @@ export default function InvoiceDetailPage() {
                           <strong>Total</strong>
                         </th>
                         <td className="text-end">
-                          <strong>{formatCurrency(invoice.total)}</strong>
+                          <strong>{formatCurrency(invoiceData.total)}</strong>
                         </td>
                       </tr>
                     </tbody>
@@ -275,7 +276,7 @@ export default function InvoiceDetailPage() {
                     <div className="card border">
                       <div className="card-body">
                         <h6 className="card-title">Total Amount</h6>
-                        <h4 className="text-primary">{formatCurrency(invoice.total)}</h4>
+                        <h4 className="text-primary">{formatCurrency(invoiceData.total)}</h4>
                       </div>
                     </div>
                   </div>
@@ -283,7 +284,7 @@ export default function InvoiceDetailPage() {
                     <div className="card border">
                       <div className="card-body">
                         <h6 className="card-title">Total Paid</h6>
-                        <h4 className="text-success">{formatCurrency(invoice.total_paid || 0)}</h4>
+                        <h4 className="text-success">{formatCurrency(invoiceData.total_paid || 0)}</h4>
                       </div>
                     </div>
                   </div>
@@ -313,7 +314,7 @@ export default function InvoiceDetailPage() {
                     </button>
                   )}
                 </div>
-                {invoice.payments && invoice.payments.length > 0 ? (
+                {invoiceData.payments && invoiceData.payments.length > 0 ? (
                   <div className="table-responsive">
                     <table className="table table-bordered">
                       <thead>
@@ -326,7 +327,7 @@ export default function InvoiceDetailPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {invoice.payments.map((payment) => (
+                        {invoiceData.payments.map((payment: any) => (
                           <tr key={payment.id}>
                             <td>{formatDateTime(payment.paid_at)}</td>
                             <td className="fw-semibold">{formatCurrency(payment.amount)}</td>
@@ -351,21 +352,21 @@ export default function InvoiceDetailPage() {
               </div>
 
               {/* Notes */}
-              {invoice.notes && (
+              {invoiceData.notes && (
                 <div className="mb-4">
                   <h6 className="mb-2">Notes</h6>
-                  <p className="text-muted">{invoice.notes}</p>
+                  <p className="text-muted">{invoiceData.notes}</p>
                 </div>
               )}
 
               {/* Due Date */}
               <div className="mb-4">
                 <p className="mb-1">
-                  <strong>Due Date:</strong> {formatDate(invoice.due_date)}
+                  <strong>Due Date:</strong> {formatDate(invoiceData.due_date)}
                 </p>
-                {invoice.paid_at && (
+                {invoiceData.paid_at && (
                   <p className="mb-0">
-                    <strong>Paid At:</strong> {formatDateTime(invoice.paid_at)}
+                    <strong>Paid At:</strong> {formatDateTime(invoiceData.paid_at)}
                   </p>
                 )}
               </div>
@@ -391,7 +392,7 @@ export default function InvoiceDetailPage() {
             setShowPaymentModal(false)
             refetch()
           }}
-          invoiceId={invoice.id}
+          invoiceId={invoiceData.id}
           maxAmount={balance}
         />
       )}
@@ -405,7 +406,7 @@ export default function InvoiceDetailPage() {
             setShowEditModal(false)
             refetch()
           }}
-          invoice={invoice}
+          invoice={invoiceData as any}
         />
       )}
 

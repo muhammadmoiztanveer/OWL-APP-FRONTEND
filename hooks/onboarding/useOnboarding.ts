@@ -20,11 +20,6 @@ export function useOnboardingStatus() {
       return response.data
     },
     retry: 1,
-    onError: (error: any) => {
-      if (error.response?.status !== 401) {
-        console.error('Failed to load onboarding status:', error)
-      }
-    },
   })
 }
 
@@ -42,11 +37,6 @@ export function useOnboardingSteps() {
       return response.data
     },
     retry: 1,
-    onError: (error: any) => {
-      if (error.response?.status !== 401) {
-        console.error('Failed to load onboarding steps:', error)
-      }
-    },
   })
 }
 
@@ -67,13 +57,6 @@ export function useUpdateOnboardingStep() {
     onSuccess: () => {
       // Invalidate and refetch onboarding data
       queryClient.invalidateQueries({ queryKey: ['onboarding'] })
-    },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to update step'
-      toast.error(message)
     },
   })
 }
@@ -97,13 +80,6 @@ export function useUpdateProfileStep() {
       queryClient.invalidateQueries({ queryKey: ['onboarding'] })
       queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] })
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to update profile step'
-      toast.error(message)
-    },
   })
 }
 
@@ -126,13 +102,6 @@ export function useCompleteOnboarding() {
       queryClient.invalidateQueries({ queryKey: ['onboarding'] })
       queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] })
       toast.success('Onboarding completed successfully!')
-    },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to complete onboarding'
-      toast.error(message)
     },
   })
 }

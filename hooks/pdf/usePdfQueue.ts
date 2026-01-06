@@ -13,10 +13,6 @@ export function usePdfQueue(params?: PdfQueueListParams) {
       }
       return response
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load PDF queue'
-      toast.error(message)
-    },
   })
 }
 
@@ -34,10 +30,6 @@ export function useRetryPdfGeneration() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pdf-queue'] })
       toast.success('PDF generation retried successfully')
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to retry PDF generation'
-      toast.error(message)
     },
   })
 }

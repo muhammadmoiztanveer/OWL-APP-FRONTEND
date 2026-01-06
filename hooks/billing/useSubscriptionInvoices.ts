@@ -14,11 +14,6 @@ export function useSubscriptionInvoices(params?: InvoicesListParams) {
       }
       return response
     },
-    onError: (error: any) => {
-      if (error.response?.status !== 403) {
-        toast.error(error.message || 'Failed to load invoices')
-      }
-    },
   })
 }
 
@@ -33,9 +28,6 @@ export function useSubscriptionInvoice(id: number) {
       return response.data
     },
     enabled: !!id,
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to load invoice')
-    },
   })
 }
 
@@ -56,11 +48,7 @@ export function useGenerateMonthlyInvoices() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['subscription-invoices'] })
-      toast.success(`Generated ${data.generated} invoices${data.errors > 0 ? `, ${data.errors} errors` : ''}`)
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to generate invoices'
-      toast.error(message)
+      toast.success(`Generated ${(data as any)?.generated || 0} invoices${(data as any)?.errors > 0 ? `, ${(data as any).errors} errors` : ''}`)
     },
   })
 }
@@ -84,10 +72,6 @@ export function useSendInvoiceEmail() {
       queryClient.invalidateQueries({ queryKey: ['subscription-invoices'] })
       toast.success('Invoice email sent successfully')
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to send invoice email'
-      toast.error(message)
-    },
   })
 }
 
@@ -109,10 +93,6 @@ export function useMarkInvoiceAsPaid() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription-invoices'] })
       toast.success('Invoice marked as paid')
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to mark invoice as paid'
-      toast.error(message)
     },
   })
 }

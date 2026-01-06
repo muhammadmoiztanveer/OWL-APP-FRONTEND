@@ -17,10 +17,6 @@ export function useAuditLogs(params?: AuditLogFilters) {
     },
     staleTime: 0, // Always refetch when query key changes
     gcTime: 0, // Don't cache results (previously cacheTime)
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load audit logs'
-      toast.error(message)
-    },
   })
 }
 
@@ -35,10 +31,6 @@ export function useAuditLog(id: number) {
       return response.data
     },
     enabled: !!id,
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load audit log'
-      toast.error(message)
-    },
   })
 }
 
@@ -51,10 +43,6 @@ export function useAuditLogStats(params?: { start_date?: string; end_date?: stri
         throw new Error(response.message || 'Failed to fetch audit log statistics')
       }
       return response.data
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load statistics'
-      toast.error(message)
     },
   })
 }

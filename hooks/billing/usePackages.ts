@@ -20,13 +20,6 @@ export function usePackages(params?: PackagesListParams) {
       return response
     },
     enabled: hasPermission('billing.manage'),
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view packages')
-      } else {
-        toast.error(error.message || 'Failed to load packages')
-      }
-    },
   })
 }
 
@@ -46,13 +39,6 @@ export function usePackage(id: number) {
       return response.data
     },
     enabled: !!id && hasPermission('billing.manage'),
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view package details')
-      } else {
-        toast.error(error.message || 'Failed to load package')
-      }
-    },
   })
 }
 
@@ -74,10 +60,6 @@ export function useCreatePackage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['packages'] })
       toast.success('Package created successfully')
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to create package'
-      toast.error(message)
     },
   })
 }
@@ -101,10 +83,6 @@ export function useUpdatePackage() {
       queryClient.invalidateQueries({ queryKey: ['packages'] })
       toast.success('Package updated successfully')
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to update package'
-      toast.error(message)
-    },
   })
 }
 
@@ -126,10 +104,6 @@ export function useDeletePackage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['packages'] })
       toast.success('Package deleted successfully')
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to delete package'
-      toast.error(message)
     },
   })
 }

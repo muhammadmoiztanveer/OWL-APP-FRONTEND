@@ -31,6 +31,7 @@ export default function PaymentFormModal({
 }: PaymentFormModalProps) {
   const createMutation = useCreatePayment()
   const { data: invoice } = useInvoice(invoiceId)
+  const invoiceData = invoice as any
 
   const {
     register,
@@ -69,10 +70,10 @@ export default function PaymentFormModal({
 
   // Auto-set amount to balance if available
   useEffect(() => {
-    if (invoice && invoice.balance !== undefined && !amount) {
-      setValue('amount', invoice.balance.toFixed(2))
+    if (invoiceData && invoiceData.balance !== undefined && !amount) {
+      setValue('amount', invoiceData.balance.toFixed(2))
     }
-  }, [invoice, amount, setValue])
+  }, [invoiceData, amount, setValue])
 
   const onSubmit = async (data: CreatePaymentRequest) => {
     try {
@@ -109,11 +110,11 @@ export default function PaymentFormModal({
           </div>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="modal-body">
-              {invoice && (
+              {invoiceData && (
                 <div className="alert alert-info mb-3">
-                  <strong>Invoice:</strong> {invoice.invoice_number}
+                  <strong>Invoice:</strong> {invoiceData.invoice_number}
                   <br />
-                  <strong>Balance:</strong> ${invoice.balance?.toFixed(2) || '0.00'}
+                  <strong>Balance:</strong> ${invoiceData.balance?.toFixed(2) || '0.00'}
                 </div>
               )}
 

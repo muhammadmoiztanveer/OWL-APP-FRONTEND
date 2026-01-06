@@ -141,7 +141,7 @@ export default function AssessmentDetailPage() {
               <div className="card-body text-center py-5">
                 <i className="uil-exclamation-octagon font-size-48 text-warning"></i>
                 <h4 className="mt-3 mb-2">Assessment Not Found</h4>
-                <p className="text-muted">The assessment you're looking for doesn't exist or has been removed.</p>
+                <p className="text-muted">The assessment you&apos;re looking for doesn&apos;t exist or has been removed.</p>
                 <Link href="/doctor/assessments" className="btn btn-primary mt-3">
                   Back to Assessments
                 </Link>

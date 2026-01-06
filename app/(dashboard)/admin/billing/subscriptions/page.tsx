@@ -26,8 +26,9 @@ export default function SubscriptionsPage() {
   const { data: subscriptionsData, isLoading } = useSubscriptions({
     page: currentPage,
     per_page: 15,
-    status: statusFilter || undefined,
+    status: (statusFilter && statusFilter !== '' ? statusFilter as 'cancelled' | 'active' | 'suspended' : undefined),
   })
+  const subscriptionsDataTyped = subscriptionsData as any
 
   return (
     <PermissionGate permission="billing.manage" fallback={<UnauthorizedMessage />}>
@@ -66,7 +67,7 @@ export default function SubscriptionsPage() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-              ) : subscriptionsData?.data && subscriptionsData.data.length > 0 ? (
+              ) : subscriptionsDataTyped?.data && Array.isArray(subscriptionsDataTyped.data) && subscriptionsDataTyped.data.length > 0 ? (
                 <>
                   <div className="table-responsive">
                     <table className="table table-striped table-bordered">
@@ -82,7 +83,7 @@ export default function SubscriptionsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {subscriptionsData.data.map((subscription: Subscription) => (
+                        {subscriptionsDataTyped.data.map((subscription: Subscription) => (
                           <tr key={subscription.id}>
                             <td>
                               {subscription.doctor?.full_name || 'N/A'}
@@ -124,10 +125,10 @@ export default function SubscriptionsPage() {
                       </tbody>
                     </table>
                   </div>
-                  {subscriptionsData.meta && (
+                  {subscriptionsDataTyped?.meta && subscriptionsDataTyped?.links && (
                     <Pagination
-                      currentPage={currentPage}
-                      totalPages={subscriptionsData.meta.last_page}
+                      meta={subscriptionsDataTyped.meta}
+                      links={subscriptionsDataTyped.links}
                       onPageChange={setCurrentPage}
                     />
                   )}

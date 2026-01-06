@@ -30,6 +30,7 @@ export default function DoctorDashboardPage() {
   }, [refreshProfile])
 
   const { data, isLoading, error } = useDashboardStats()
+  const dataTyped = data as any
 
   if (error && (error as any).response?.status === 403) {
     return (
@@ -50,7 +51,7 @@ export default function DoctorDashboardPage() {
             <span className="visually-hidden">Loading...</span>
           </div>
         </div>
-      ) : data ? (
+      ) : dataTyped ? (
         <>
           {/* Stats Cards */}
           <div className="row">
@@ -59,7 +60,7 @@ export default function DoctorDashboardPage() {
                 <div className="card-body">
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
-                      <h4 className="mb-0">{data.stats.total_active_patients}</h4>
+                      <h4 className="mb-0">{dataTyped.stats.total_active_patients}</h4>
                       <p className="text-muted mb-0">Total Active Patients</p>
                     </div>
                     <div className="avatar-sm">
@@ -76,7 +77,7 @@ export default function DoctorDashboardPage() {
                 <div className="card-body">
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
-                      <h4 className="mb-0">{data.stats.total_assessments}</h4>
+                      <h4 className="mb-0">{dataTyped.stats.total_assessments}</h4>
                       <p className="text-muted mb-0">Total Assessments</p>
                     </div>
                     <div className="avatar-sm">
@@ -93,7 +94,7 @@ export default function DoctorDashboardPage() {
                 <div className="card-body">
                   <div className="d-flex align-items-center">
                     <div className="flex-grow-1">
-                      <h4 className="mb-0">{data.stats.pending_orders}</h4>
+                      <h4 className="mb-0">{dataTyped.stats.pending_orders}</h4>
                       <p className="text-muted mb-0">Pending Orders</p>
                     </div>
                     <div className="avatar-sm">
@@ -118,7 +119,7 @@ export default function DoctorDashboardPage() {
                       View All
                     </Link>
                   </div>
-                  {data.recent_assessments && data.recent_assessments.length > 0 ? (
+                  {dataTyped.recent_assessments && dataTyped.recent_assessments.length > 0 ? (
                     <div className="table-responsive">
                       <table className="table table-nowrap align-middle mb-0">
                         <thead>
@@ -132,7 +133,7 @@ export default function DoctorDashboardPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {data.recent_assessments.map((assessment) => (
+                          {dataTyped.recent_assessments.map((assessment: any) => (
                             <tr key={assessment.id}>
                               <td>{assessment.patient?.name || 'N/A'}</td>
                               <td>{assessment.assessment_type}</td>

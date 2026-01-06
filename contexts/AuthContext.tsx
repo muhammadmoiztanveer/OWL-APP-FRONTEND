@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // Define refreshProfile after handleLogout - memoized with useCallback to prevent infinite loops
-  const refreshProfile = useCallback(async () => {
+  const refreshProfile = useCallback(async (): Promise<void> => {
     try {
       const response = await authApi.getProfile()
       if (response.success && response.data) {
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const userWithAccountType = { ...updatedUser, account_type: user.account_type }
             setUser(userWithAccountType)
             localStorage.setItem('user', JSON.stringify(userWithAccountType))
-            return userWithAccountType
+            return
           } else {
             // No existing account_type either - this is a critical backend issue
             if (process.env.NODE_ENV === 'development') {
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Still update user but log warning - backend should be fixed
             setUser(updatedUser)
             localStorage.setItem('user', JSON.stringify(updatedUser))
-            return updatedUser
+            return
           }
         }
         
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           })
         }
         
-        return updatedUser
+        return
       }
     } catch (error: any) {
       console.error('Error refreshing profile:', error)

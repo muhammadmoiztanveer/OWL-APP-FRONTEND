@@ -58,8 +58,8 @@ export default function OnboardingWizard() {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
   // Filter out insurance and medical steps for patients (doctor-driven flow)
-  const allSteps = stepsData?.steps || []
-  const steps = allSteps.filter((step) => {
+  const allSteps = (stepsData as any)?.steps || []
+  const steps = allSteps.filter((step: any) => {
     // Remove insurance and medical background steps for patients
     if (user?.account_type === 'patient') {
       return step.key !== 'profile_insurance' && step.key !== 'profile_medical'
@@ -72,7 +72,7 @@ export default function OnboardingWizard() {
   // Set current step to first incomplete step
   useEffect(() => {
     if (steps.length > 0) {
-      const firstIncompleteIndex = steps.findIndex((s) => !s.completed)
+      const firstIncompleteIndex = steps.findIndex((s: any) => !s.completed)
       if (firstIncompleteIndex >= 0) {
         setCurrentStepIndex(firstIncompleteIndex)
       }

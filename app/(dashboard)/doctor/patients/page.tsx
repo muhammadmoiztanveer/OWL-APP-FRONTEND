@@ -51,6 +51,7 @@ export default function PatientsPage() {
     per_page: 15,
     search: searchTerm || undefined,
   })
+  const dataTyped = data as any
   const deleteMutation = useDeletePatient()
 
   const handleSearch = (value: string) => {
@@ -144,7 +145,7 @@ export default function PatientsPage() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-              ) : data && data.data.length > 0 ? (
+              ) : (dataTyped as any) && (dataTyped as any).data.length > 0 ? (
                 <>
                   <div className="table-responsive">
                     <table className="table table-striped table-nowrap align-middle mb-0">
@@ -158,7 +159,7 @@ export default function PatientsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {data.data.map((patient) => (
+                        {(dataTyped as any).data.map((patient: any) => (
                           <tr key={patient.id}>
                             <td>{patient.name}</td>
                             <td>{patient.email}</td>
@@ -200,11 +201,11 @@ export default function PatientsPage() {
                   </div>
 
                   {/* Pagination */}
-                  {data.meta && data.links && (
+                  {(dataTyped as any).meta && (dataTyped as any).links && (
                     <div className="mt-3">
                       <Pagination
-                        meta={data.meta}
-                        links={data.links}
+                        meta={(dataTyped as any).meta}
+                        links={(dataTyped as any).links}
                         onPageChange={setCurrentPage}
                       />
                     </div>

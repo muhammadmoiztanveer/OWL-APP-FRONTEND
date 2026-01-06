@@ -13,10 +13,6 @@ export function useDoctors(params?: DoctorsListParams) {
       }
       return response
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load doctors'
-      toast.error(message)
-    },
   })
 }
 

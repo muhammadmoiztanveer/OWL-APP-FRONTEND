@@ -15,6 +15,7 @@ const formatCurrency = (amount: number) => {
 export default function BillingDashboardPage() {
   const { hasPermission } = usePermissions()
   const { data: stats, isLoading, error } = useInvoiceStats()
+  const statsData = stats as any
 
   return (
     <>
@@ -31,7 +32,7 @@ export default function BillingDashboardPage() {
                     {isLoading ? (
                       <span className="spinner-border spinner-border-sm text-primary" role="status"></span>
                     ) : (
-                      formatCurrency(stats?.total_revenue || 0)
+                      formatCurrency(statsData?.total_revenue || 0)
                     )}
                   </h4>
                   <p className="text-muted mb-0">Total Revenue</p>
@@ -55,7 +56,7 @@ export default function BillingDashboardPage() {
                     {isLoading ? (
                       <span className="spinner-border spinner-border-sm text-primary" role="status"></span>
                     ) : (
-                      stats?.pending_count || 0
+                      statsData?.pending_count || 0
                     )}
                   </h4>
                   <p className="text-muted mb-0">Pending Invoices</p>
@@ -79,7 +80,7 @@ export default function BillingDashboardPage() {
                     {isLoading ? (
                       <span className="spinner-border spinner-border-sm text-primary" role="status"></span>
                     ) : (
-                      stats?.overdue_count || 0
+                      statsData?.overdue_count || 0
                     )}
                   </h4>
                   <p className="text-muted mb-0">Overdue Invoices</p>

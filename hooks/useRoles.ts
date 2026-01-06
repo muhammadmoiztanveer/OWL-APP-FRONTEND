@@ -19,13 +19,6 @@ export function useRoles() {
       return response
     },
     enabled: isAdmin,
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view roles')
-      } else {
-        toast.error(error.message || 'Failed to load roles')
-      }
-    },
   })
 }
 

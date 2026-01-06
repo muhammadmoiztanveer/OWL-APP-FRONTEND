@@ -24,6 +24,7 @@ const formatDate = (dateString: string | undefined) => {
 
 export default function PatientDetailsModal({ patientId, onClose }: PatientDetailsModalProps) {
   const { data, isLoading } = usePatient(patientId)
+  const dataTyped = data as any
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -57,19 +58,19 @@ export default function PatientDetailsModal({ patientId, onClose }: PatientDetai
                     <tbody>
                       <tr>
                         <th style={{ width: '30%' }}>Name:</th>
-                        <td>{data.patient.name}</td>
+                        <td>{dataTyped.patient.name}</td>
                       </tr>
                       <tr>
                         <th>Email:</th>
-                        <td>{data.patient.email}</td>
+                        <td>{dataTyped.patient.email}</td>
                       </tr>
                       <tr>
                         <th>Date of Birth:</th>
-                        <td>{formatDate(data.patient.date_of_birth)}</td>
+                        <td>{formatDate(dataTyped.patient.date_of_birth)}</td>
                       </tr>
                       <tr>
                         <th>Phone:</th>
-                        <td>{data.patient.phone || '-'}</td>
+                        <td>{dataTyped.patient.phone || '-'}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -101,10 +102,10 @@ export default function PatientDetailsModal({ patientId, onClose }: PatientDetai
         </div>
       </div>
 
-      {showAssignModal && data?.patient && (
+      {showAssignModal && dataTyped?.patient && (
         <AssignAssessmentModal
           patientId={patientId}
-          patientName={data.patient.name}
+          patientName={dataTyped.patient.name}
           onClose={() => setShowAssignModal(false)}
           onSuccess={handleAssessmentAssigned}
         />

@@ -16,7 +16,9 @@ interface PackageFormModalProps {
 export default function PackageFormModal({ packageId, onClose, onSuccess }: PackageFormModalProps) {
   const isEditing = !!packageId
   const { data: packageData, isLoading: loadingPackage } = usePackage(packageId || 0)
+  const packageDataTyped = packageData as any
   const { data: stripeSettings } = useStripeSettings()
+  const stripeSettingsTyped = stripeSettings as any
   const createMutation = useCreatePackage()
   const updateMutation = useUpdatePackage()
 
@@ -45,21 +47,21 @@ export default function PackageFormModal({ packageId, onClose, onSuccess }: Pack
 
   const createStripeProduct = watch('create_stripe_product')
   const isStripeConfigured =
-    stripeSettings?.public_key_configured && stripeSettings?.secret_key_configured
+    stripeSettingsTyped?.public_key_configured && stripeSettingsTyped?.secret_key_configured
 
   useEffect(() => {
     if (isEditing && packageData) {
       reset({
-        name: packageData.name,
-        description: packageData.description || '',
-        monthly_price: packageData.monthly_price,
-        yearly_price: packageData.yearly_price,
-        max_patients: packageData.max_patients,
-        max_assessments_per_month: packageData.max_assessments_per_month,
-        is_active: packageData.is_active,
+        name: packageDataTyped.name,
+        description: packageDataTyped.description || '',
+        monthly_price: packageDataTyped.monthly_price,
+        yearly_price: packageDataTyped.yearly_price,
+        max_patients: packageDataTyped.max_patients,
+        max_assessments_per_month: packageDataTyped.max_assessments_per_month,
+        is_active: packageDataTyped.is_active,
         create_stripe_product: false, // Don't create on edit
       })
-      setFeatures(packageData.features || [])
+      setFeatures(packageDataTyped.features || [])
     }
   }, [isEditing, packageData, reset])
 

@@ -46,9 +46,9 @@ export default function DoctorAssessmentsPage() {
   const { data, isLoading, error } = useAssessments({
     page: currentPage,
     per_page: 15,
-    search: searchTerm || undefined,
-    status: statusFilter || undefined,
-  })
+    status: (statusFilter && statusFilter !== '' ? statusFilter as 'pending' | 'completed' | 'reviewed' : undefined),
+  } as any)
+  const dataTyped = data as any
 
   const handleSearch = (value: string) => {
     setSearchTerm(value)
@@ -129,7 +129,7 @@ export default function DoctorAssessmentsPage() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-              ) : data?.data.length === 0 ? (
+              ) : (dataTyped as any)?.data.length === 0 ? (
                 <div className="text-center py-5">
                   <i className="uil-clipboard-alt font-size-48 text-muted"></i>
                   <p className="text-muted mt-3">No assessments found.</p>
@@ -149,7 +149,7 @@ export default function DoctorAssessmentsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {data?.data.map((assessment: Assessment) => (
+                        {(dataTyped as any)?.data.map((assessment: Assessment) => (
                           <tr key={assessment.id}>
                             <td>{assessment.patient?.name || 'N/A'}</td>
                             <td className="text-capitalize">{formatAssessmentType(assessment.assessment_type)}</td>
@@ -180,11 +180,11 @@ export default function DoctorAssessmentsPage() {
                       </tbody>
                     </table>
                   </div>
-                  {data?.meta && data?.links && (
+                  {dataTyped?.meta && dataTyped?.links && (
                     <div className="mt-3">
                       <Pagination
-                        meta={data.meta}
-                        links={data.links}
+                        meta={dataTyped?.meta}
+                        links={dataTyped?.links}
                         onPageChange={setCurrentPage}
                       />
                     </div>

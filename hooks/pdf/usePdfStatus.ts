@@ -23,13 +23,7 @@ export function usePdfStatus(
       return response.data
     },
     enabled: !!assessmentId && isAuthenticated && (options?.enabled !== false),
-    refetchInterval: options?.refetchInterval ?? false,
-    onError: (error: any) => {
-      if (error.response?.status !== 404) {
-        // Don't show error for 404 (PDF not generated yet)
-        toast.error(error.message || 'Failed to load PDF status')
-      }
-    },
+    refetchInterval: (options?.refetchInterval ?? false) as number | false,
   })
 }
 

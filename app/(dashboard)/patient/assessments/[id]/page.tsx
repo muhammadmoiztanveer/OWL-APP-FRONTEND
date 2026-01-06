@@ -52,6 +52,8 @@ export default function AssessmentDetailPage() {
   const { hasRole } = usePermissions()
   const isPatient = useHasRole('patient')
   const isAdmin = useHasRole('admin')
+  const { data: assessment, isLoading, error } = usePatientAssessment(id)
+  const assessmentData = assessment as any
 
   // Only allow patients or admins
   if (!isPatient && !isAdmin) {
@@ -63,13 +65,11 @@ export default function AssessmentDetailPage() {
     )
   }
 
-  const { data: assessment, isLoading, error } = usePatientAssessment(id)
-
   if (error && (error as any).response?.status === 403) {
     return (
       <>
         <Breadcrumb pagetitle="MENTAL HEALTH ASSESSMENT SYSTEM" title="Assessment Details" />
-        <UnauthorizedMessage message="You do not have permission to view this assessment." />
+        <UnauthorizedMessage message="You do not have permission to view this assessmentData." />
       </>
     )
   }
@@ -84,7 +84,7 @@ export default function AssessmentDetailPage() {
               <div className="card-body text-center py-5">
                 <i className="uil-exclamation-octagon font-size-48 text-warning"></i>
                 <h4 className="mt-3 mb-2">Assessment Not Found</h4>
-                <p className="text-muted">The assessment you're looking for doesn't exist or has been removed.</p>
+                <p className="text-muted">The assessment you&apos;re looking for doesn&apos;t exist or has been removed.</p>
               </div>
             </div>
           </div>
@@ -125,9 +125,9 @@ export default function AssessmentDetailPage() {
     )
   }
 
-  const severity = assessment.severity as Severity | { phq9: Severity; gad7: Severity } | undefined
-  const recommendation = assessment.recommendation as string | { phq9: string; gad7: string } | undefined
-  const isComprehensive = assessment.assessment_type === 'comprehensive'
+  const severity = assessmentData.severity as Severity | { phq9: Severity; gad7: Severity } | undefined
+  const recommendation = assessmentData.recommendation as string | { phq9: string; gad7: string } | undefined
+  const isComprehensive = assessmentData.assessment_type === 'comprehensive'
 
   return (
     <>
@@ -139,10 +139,10 @@ export default function AssessmentDetailPage() {
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                  <h4 className="card-title mb-0">{formatAssessmentType(assessment.assessment_type)}</h4>
-                  <p className="text-muted mb-0">Assessment ID: #{assessment.id}</p>
+                  <h4 className="card-title mb-0">{formatAssessmentType(assessmentData.assessment_type)}</h4>
+                  <p className="text-muted mb-0">Assessment ID: #{assessmentData.id}</p>
                 </div>
-                <StatusBadge status={assessment.status} />
+                <StatusBadge status={assessmentData.status} />
               </div>
 
               {/* Assessment Information */}
@@ -153,73 +153,73 @@ export default function AssessmentDetailPage() {
                     <tbody>
                       <tr>
                         <th style={{ width: '30%' }}>Assessment Type</th>
-                        <td>{formatAssessmentType(assessment.assessment_type)}</td>
+                        <td>{formatAssessmentType(assessmentData.assessment_type)}</td>
                       </tr>
                       <tr>
                         <th>Status</th>
                         <td>
-                          <StatusBadge status={assessment.status} />
+                          <StatusBadge status={assessmentData.status} />
                         </td>
                       </tr>
-                      {assessment.completed_on && (
+                      {assessmentData.completed_on && (
                         <tr>
                           <th>Completed On</th>
-                          <td>{formatDate(assessment.completed_on)}</td>
+                          <td>{formatDate(assessmentData.completed_on)}</td>
                         </tr>
                       )}
-                      {assessment.reviewed_at && (
+                      {assessmentData.reviewed_at && (
                         <tr>
                           <th>Reviewed On</th>
-                          <td>{formatDate(assessment.reviewed_at)}</td>
+                          <td>{formatDate(assessmentData.reviewed_at)}</td>
                         </tr>
                       )}
-                      {assessment.assessment_order && (
+                      {assessmentData.assessment_order && (
                         <>
                           <tr>
                             <th>Ordered On</th>
-                            <td>{formatDate(assessment.assessment_order.ordered_on)}</td>
+                            <td>{formatDate(assessmentData.assessment_order.ordered_on)}</td>
                           </tr>
-                          {assessment.assessment_order.sent_at && (
+                          {assessmentData.assessment_order.sent_at && (
                             <tr>
                               <th>Sent At</th>
-                              <td>{formatDate(assessment.assessment_order.sent_at)}</td>
+                              <td>{formatDate(assessmentData.assessment_order.sent_at)}</td>
                             </tr>
                           )}
-                          {assessment.assessment_order.instructions && (
+                          {assessmentData.assessment_order.instructions && (
                             <tr>
                               <th>Instructions</th>
-                              <td>{assessment.assessment_order.instructions}</td>
+                              <td>{assessmentData.assessment_order.instructions}</td>
                             </tr>
                           )}
                         </>
                       )}
-                      {assessment.doctor && (
+                      {assessmentData.doctor && (
                         <tr>
                           <th>Healthcare Provider</th>
                           <td>
-                            {assessment.doctor.first_name && assessment.doctor.last_name
-                              ? `${assessment.doctor.first_name} ${assessment.doctor.last_name}`
-                              : assessment.doctor.full_name || assessment.doctor.name || assessment.doctor.email || 'N/A'}
+                            {assessmentData.doctor.first_name && assessmentData.doctor.last_name
+                              ? `${assessmentData.doctor.first_name} ${assessmentData.doctor.last_name}`
+                              : assessmentData.doctor.full_name || assessmentData.doctor.name || assessmentData.doctor.email || 'N/A'}
                           </td>
                         </tr>
                       )}
-                      {assessment.doctor?.practice_name && (
+                      {assessmentData.doctor?.practice_name && (
                         <tr>
                           <th>Practice</th>
-                          <td>{assessment.doctor.practice_name}</td>
+                          <td>{assessmentData.doctor.practice_name}</td>
                         </tr>
                       )}
-                      {assessment.assessment_order?.assigned_by_doctor && (
+                      {assessmentData.assessment_order?.assigned_by_doctor && (
                         <tr>
                           <th>Assigned By</th>
                           <td>
-                            {assessment.assessment_order.assigned_by_doctor.first_name &&
-                            assessment.assessment_order.assigned_by_doctor.last_name
-                              ? `${assessment.assessment_order.assigned_by_doctor.first_name} ${assessment.assessment_order.assigned_by_doctor.last_name}`
-                              : assessment.assessment_order.assigned_by_doctor.full_name || 'N/A'}
-                            {assessment.assessment_order.assigned_by_doctor.practice_name && (
+                            {assessmentData.assessment_order.assigned_by_doctor.first_name &&
+                            assessmentData.assessment_order.assigned_by_doctor.last_name
+                              ? `${assessmentData.assessment_order.assigned_by_doctor.first_name} ${assessmentData.assessment_order.assigned_by_doctor.last_name}`
+                              : assessmentData.assessment_order.assigned_by_doctor.full_name || 'N/A'}
+                            {assessmentData.assessment_order.assigned_by_doctor.practice_name && (
                               <span className="text-muted ms-2">
-                                ({assessment.assessment_order.assigned_by_doctor.practice_name})
+                                ({assessmentData.assessment_order.assigned_by_doctor.practice_name})
                               </span>
                             )}
                           </td>
@@ -239,7 +239,7 @@ export default function AssessmentDetailPage() {
                       <div className="card border">
                         <div className="card-body">
                           <h6 className="card-title">PHQ-9 Score</h6>
-                          <h3 className="text-primary">{assessment.phq9_score || 'N/A'}</h3>
+                          <h3 className="text-primary">{assessmentData.phq9_score || 'N/A'}</h3>
                           {severity && typeof severity === 'object' && 'phq9' in severity && (
                             <div className="mt-2">
                               <span className={`badge bg-${getSeverityColor(severity.phq9.level)}`}>
@@ -255,7 +255,7 @@ export default function AssessmentDetailPage() {
                       <div className="card border">
                         <div className="card-body">
                           <h6 className="card-title">GAD-7 Score</h6>
-                          <h3 className="text-primary">{assessment.gad7_score || 'N/A'}</h3>
+                          <h3 className="text-primary">{assessmentData.gad7_score || 'N/A'}</h3>
                           {severity && typeof severity === 'object' && 'gad7' in severity && (
                             <div className="mt-2">
                               <span className={`badge bg-${getSeverityColor(severity.gad7.level)}`}>
@@ -272,7 +272,7 @@ export default function AssessmentDetailPage() {
                   <div className="card border">
                     <div className="card-body">
                       <h6 className="card-title">Total Score</h6>
-                      <h3 className="text-primary">{assessment.score}</h3>
+                      <h3 className="text-primary">{assessmentData.score}</h3>
                       {severity && typeof severity === 'object' && 'level' in severity && (
                         <div className="mt-2">
                           <span className={`badge bg-${getSeverityColor(severity.level)}`}>
@@ -287,7 +287,7 @@ export default function AssessmentDetailPage() {
               </div>
 
               {/* Suicide Risk Warning */}
-              {assessment.suicide_risk !== undefined && assessment.suicide_risk > 0 && (
+              {assessmentData.suicide_risk !== undefined && assessmentData.suicide_risk > 0 && (
                 <div className="alert alert-danger mb-4">
                   <strong>Important:</strong> This assessment indicated elevated suicide risk. If you are experiencing
                   thoughts of self-harm or suicide, please contact emergency services immediately or call the National
@@ -316,17 +316,17 @@ export default function AssessmentDetailPage() {
               )}
 
               {/* Question Responses */}
-              {assessment.responses && assessment.responses.length > 0 && (
+              {assessmentData.responses && assessmentData.responses.length > 0 && (
                 <AssessmentResponses
-                  responses={assessment.responses}
+                  responses={assessmentData.responses}
                   title="Your Responses"
                   defaultExpanded={true}
                 />
               )}
 
               {/* PDF Section */}
-              {assessment.status === 'completed' && (
-                <AssessmentPdfSection assessmentId={assessment.id} assessment={assessment} />
+              {assessmentData.status === 'completed' && (
+                <AssessmentPdfSection assessmentId={assessmentData.id} assessment={assessmentData as any} />
               )}
             </div>
           </div>

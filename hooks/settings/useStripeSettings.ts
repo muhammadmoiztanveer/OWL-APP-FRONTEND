@@ -20,13 +20,6 @@ export function useStripeSettings() {
       return response.data
     },
     enabled: hasPermission('settings.manage'),
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view Stripe settings')
-      } else {
-        console.error('Failed to load Stripe settings:', error)
-      }
-    },
   })
 }
 
@@ -47,15 +40,11 @@ export function useTestStripeConnection() {
     },
     onSuccess: (data) => {
       queryClient.setQueryData(['stripe-settings'], data)
-      if (data.connection_status.connected) {
+      if ((data as any)?.connection_status?.connected) {
         toast.success('Stripe connection successful!')
       } else {
-        toast.error(data.connection_status.message || 'Stripe connection failed')
+        toast.error((data as any)?.connection_status?.message || 'Stripe connection failed')
       }
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to test Stripe connection'
-      toast.error(message)
     },
   })
 }
@@ -78,10 +67,6 @@ export function useUpdateSetting() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stripe-settings'] })
       toast.success('Setting updated successfully')
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to update setting'
-      toast.error(message)
     },
   })
 }

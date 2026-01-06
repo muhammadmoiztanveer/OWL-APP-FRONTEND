@@ -33,7 +33,7 @@ export default function PatientAccessRequestList() {
   const fetchRequests = async () => {
     setLoading(true)
     try {
-      const response = await patientApi.getAccessRequests()
+      const response = await (patientApi as any).getAccessRequests()
       if (response.success && response.data) {
         // Filter to show only pending requests
         setRequests(response.data.filter((r: AccessRequest) => r.status === 'pending'))
@@ -52,7 +52,7 @@ export default function PatientAccessRequestList() {
     }
 
     try {
-      const response = await patientApi.approveAccessRequest(id)
+      const response = await (patientApi as any).approveAccessRequest(id)
       if (response.success) {
         toast.success('Access granted. Your records have been transferred.')
         fetchRequests()
@@ -70,7 +70,7 @@ export default function PatientAccessRequestList() {
     }
 
     try {
-      const response = await patientApi.rejectAccessRequest(id)
+      const response = await (patientApi as any).rejectAccessRequest(id)
       if (response.success) {
         toast.success('Access request rejected')
         fetchRequests()

@@ -277,7 +277,7 @@ export default function AssessmentResponsesModal({
                       <p className="mb-2">
                         {assessment.doctor.first_name && assessment.doctor.last_name
                           ? `${assessment.doctor.first_name} ${assessment.doctor.last_name}`
-                          : assessment.doctor.full_name || 'N/A'}
+                          : (assessment.doctor as any).full_name || 'N/A'}
                       </p>
                     </div>
                     {assessment.doctor.practice_name && (
@@ -287,18 +287,18 @@ export default function AssessmentResponsesModal({
                       </div>
                     )}
                   </div>
-                  {assessment.assessment_order?.assigned_by_doctor && (
+                  {(assessment.assessment_order as any)?.assigned_by_doctor && (
                     <div className="row mt-2">
                       <div className="col-12">
                         <small className="text-muted d-block">Assigned By</small>
                         <p className="mb-0">
-                          {assessment.assessment_order.assigned_by_doctor.first_name &&
-                          assessment.assessment_order.assigned_by_doctor.last_name
-                            ? `${assessment.assessment_order.assigned_by_doctor.first_name} ${assessment.assessment_order.assigned_by_doctor.last_name}`
-                            : assessment.assessment_order.assigned_by_doctor.full_name || 'N/A'}
-                          {assessment.assessment_order.assigned_by_doctor.practice_name && (
+                          {(assessment.assessment_order as any)?.assigned_by_doctor.first_name &&
+                          (assessment.assessment_order as any)?.assigned_by_doctor.last_name
+                            ? `${(assessment.assessment_order as any)?.assigned_by_doctor.first_name} ${(assessment.assessment_order as any)?.assigned_by_doctor.last_name}`
+                            : (assessment.assessment_order as any)?.assigned_by_doctor.full_name || 'N/A'}
+                          {(assessment.assessment_order as any)?.assigned_by_doctor.practice_name && (
                             <span className="text-muted ms-2">
-                              ({assessment.assessment_order.assigned_by_doctor.practice_name})
+                              ({(assessment.assessment_order as any)?.assigned_by_doctor.practice_name})
                             </span>
                           )}
                         </p>

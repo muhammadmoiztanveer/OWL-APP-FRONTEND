@@ -15,18 +15,11 @@ export function useUsers(params?: UsersListParams) {
       }
       const response = await usersApi.list(params)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to fetch users')
+        throw new Error((response as any).message || 'Failed to fetch users')
       }
       return response
     },
     enabled: isAdmin,
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view users')
-      } else {
-        toast.error(error.message || 'Failed to load users')
-      }
-    },
   })
 }
 
@@ -41,20 +34,11 @@ export function useUser(id: number) {
       }
       const response = await usersApi.get(id)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to fetch user')
+        throw new Error((response as any).message || 'Failed to fetch user')
       }
       return response.data
     },
     enabled: !!id && isAdmin,
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view user details')
-      } else if (error.response?.status === 404) {
-        toast.error('User not found')
-      } else {
-        toast.error(error.message || 'Failed to load user')
-      }
-    },
   })
 }
 
@@ -69,7 +53,7 @@ export function useUpdateUser() {
       }
       const response = await usersApi.update(id, data)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to update user')
+        throw new Error((response as any).message || 'Failed to update user')
       }
       return response.data
     },
@@ -77,18 +61,6 @@ export function useUpdateUser() {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       queryClient.invalidateQueries({ queryKey: ['user', variables.id] })
       toast.success('User updated successfully')
-    },
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to update users')
-      } else {
-        const message =
-          error.response?.data?.message ||
-          Object.values(error.response?.data?.errors || {}).flat()[0] ||
-          error.message ||
-          'Failed to update user'
-        toast.error(message)
-      }
     },
   })
 }
@@ -104,21 +76,13 @@ export function useDeleteUser() {
       }
       const response = await usersApi.delete(id)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to delete user')
+        throw new Error((response as any).message || 'Failed to delete user')
       }
       return response
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] })
       toast.success('User deleted successfully')
-    },
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        const message = error.response?.data?.message || 'You do not have permission to delete users'
-        toast.error(message)
-      } else {
-        toast.error(error.message || 'Failed to delete user')
-      }
     },
   })
 }

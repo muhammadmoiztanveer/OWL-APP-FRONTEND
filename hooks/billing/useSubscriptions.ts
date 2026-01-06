@@ -26,13 +26,6 @@ export function useSubscriptions(params?: SubscriptionsListParams) {
       return response
     },
     enabled: hasPermission('billing.manage'),
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view subscriptions')
-      } else {
-        toast.error(error.message || 'Failed to load subscriptions')
-      }
-    },
   })
 }
 
@@ -45,11 +38,6 @@ export function useCurrentSubscription() {
         throw new Error('Failed to fetch subscription')
       }
       return response.data
-    },
-    onError: (error: any) => {
-      if (error.response?.status !== 404) {
-        toast.error(error.message || 'Failed to load subscription')
-      }
     },
   })
 }
@@ -70,13 +58,6 @@ export function useSubscription(id: number) {
       return response.data
     },
     enabled: !!id && hasPermission('billing.manage'),
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view subscription details')
-      } else {
-        toast.error(error.message || 'Failed to load subscription')
-      }
-    },
   })
 }
 
@@ -99,10 +80,6 @@ export function useCreateSubscription() {
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] })
       queryClient.invalidateQueries({ queryKey: ['subscription'] })
       toast.success('Subscription created successfully')
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to create subscription'
-      toast.error(message)
     },
   })
 }
@@ -127,10 +104,6 @@ export function useUpdateSubscription() {
       queryClient.invalidateQueries({ queryKey: ['subscription'] })
       toast.success('Subscription updated successfully')
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to update subscription'
-      toast.error(message)
-    },
   })
 }
 
@@ -149,10 +122,6 @@ export function useCancelSubscription() {
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] })
       queryClient.invalidateQueries({ queryKey: ['subscription'] })
       toast.success('Subscription cancelled successfully')
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to cancel subscription'
-      toast.error(message)
     },
   })
 }

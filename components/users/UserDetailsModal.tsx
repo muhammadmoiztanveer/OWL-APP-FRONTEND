@@ -23,6 +23,7 @@ const formatDate = (dateString: string | undefined) => {
 
 export default function UserDetailsModal({ userId, onClose, onEdit }: UserDetailsModalProps) {
   const { data: user, isLoading } = useUser(userId)
+  const userData = user as any
   const isAdmin = useIsAdmin()
 
   return (
@@ -40,7 +41,7 @@ export default function UserDetailsModal({ userId, onClose, onEdit }: UserDetail
                   <span className="visually-hidden">Loading...</span>
                 </div>
               </div>
-            ) : user ? (
+            ) : userData ? (
               <>
                 <div className="mb-4">
                   <h6 className="mb-3">Basic Information</h6>
@@ -48,26 +49,26 @@ export default function UserDetailsModal({ userId, onClose, onEdit }: UserDetail
                     <tbody>
                       <tr>
                         <th style={{ width: '30%' }}>ID:</th>
-                        <td>{user.id}</td>
+                        <td>{userData.id}</td>
                       </tr>
                       <tr>
                         <th>Name:</th>
-                        <td>{user.name}</td>
+                        <td>{userData.name}</td>
                       </tr>
                       <tr>
                         <th>Email:</th>
-                        <td>{user.email}</td>
+                        <td>{userData.email}</td>
                       </tr>
                       <tr>
                         <th>Account Type:</th>
                         <td>
-                          <AccountTypeBadge accountType={user.account_type} />
+                          <AccountTypeBadge accountType={userData.account_type} />
                         </td>
                       </tr>
                       <tr>
                         <th>Email Verified:</th>
                         <td>
-                          {user.email_verified_at ? (
+                          {userData.email_verified_at ? (
                             <span className="badge bg-success">Verified</span>
                           ) : (
                             <span className="badge bg-warning">Not Verified</span>
@@ -76,32 +77,32 @@ export default function UserDetailsModal({ userId, onClose, onEdit }: UserDetail
                       </tr>
                       <tr>
                         <th>Created Date:</th>
-                        <td>{formatDate(user.created_at)}</td>
+                        <td>{formatDate(userData.created_at)}</td>
                       </tr>
                       <tr>
                         <th>Updated Date:</th>
-                        <td>{formatDate(user.updated_at)}</td>
+                        <td>{formatDate(userData.updated_at)}</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
 
-                {user.roles && user.roles.length > 0 && (
+                {userData.roles && userData.roles.length > 0 && (
                   <div className="mb-4">
                     <h6 className="mb-3">Roles</h6>
                     <div className="d-flex flex-wrap gap-2">
-                      {user.roles.map((role) => (
+                      {userData.roles.map((role: any) => (
                         <RoleBadge key={role.id} role={role} />
                       ))}
                     </div>
                   </div>
                 )}
 
-                {user.permissions && user.permissions.length > 0 && (
+                {userData.permissions && userData.permissions.length > 0 && (
                   <div className="mb-4">
                     <h6 className="mb-3">Permissions</h6>
                     <div className="d-flex flex-wrap gap-2">
-                      {user.permissions.map((permission) => (
+                      {userData.permissions.map((permission: any) => (
                         <span key={permission.id} className="badge bg-success">
                           {permission.name}
                         </span>
@@ -110,26 +111,26 @@ export default function UserDetailsModal({ userId, onClose, onEdit }: UserDetail
                   </div>
                 )}
 
-                {user.doctor && (
+                {userData.doctor && (
                   <div className="mb-4">
                     <h6 className="mb-3">Doctor Profile</h6>
                     <table className="table table-bordered">
                       <tbody>
                         <tr>
                           <th style={{ width: '30%' }}>First Name:</th>
-                          <td>{user.doctor.first_name}</td>
+                          <td>{userData.doctor.first_name}</td>
                         </tr>
                         <tr>
                           <th>Last Name:</th>
-                          <td>{user.doctor.last_name}</td>
+                          <td>{userData.doctor.last_name}</td>
                         </tr>
                         <tr>
                           <th>Practice Name:</th>
-                          <td>{user.doctor.practice_name || '-'}</td>
+                          <td>{userData.doctor.practice_name || '-'}</td>
                         </tr>
                         <tr>
                           <th>Specialty:</th>
-                          <td>{user.doctor.specialty || '-'}</td>
+                          <td>{userData.doctor.specialty || '-'}</td>
                         </tr>
                       </tbody>
                     </table>

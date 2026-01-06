@@ -13,10 +13,6 @@ export function useRates(params?: RatesListParams) {
       }
       return response
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load rates'
-      toast.error(message)
-    },
   })
 }
 
@@ -29,10 +25,6 @@ export function useActiveRates() {
         throw new Error(response.message || 'Failed to fetch active rates')
       }
       return response.data || []
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load active rates'
-      toast.error(message)
     },
   })
 }
@@ -48,10 +40,6 @@ export function useRate(id: number) {
       return response.data
     },
     enabled: !!id,
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load rate'
-      toast.error(message)
-    },
   })
 }
 
@@ -70,14 +58,6 @@ export function useCreateRate() {
       queryClient.invalidateQueries({ queryKey: ['billing-rates'] })
       queryClient.invalidateQueries({ queryKey: ['billing-rates-active'] })
       toast.success('Rate created successfully')
-    },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        Object.values(error.response?.data?.errors || {}).flat()[0] ||
-        error.message ||
-        'Failed to create rate'
-      toast.error(message)
     },
   })
 }
@@ -99,14 +79,6 @@ export function useUpdateRate() {
       queryClient.invalidateQueries({ queryKey: ['billing-rate', variables.id] })
       toast.success('Rate updated successfully')
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        Object.values(error.response?.data?.errors || {}).flat()[0] ||
-        error.message ||
-        'Failed to update rate'
-      toast.error(message)
-    },
   })
 }
 
@@ -125,10 +97,6 @@ export function useDeleteRate() {
       queryClient.invalidateQueries({ queryKey: ['billing-rates'] })
       queryClient.invalidateQueries({ queryKey: ['billing-rates-active'] })
       toast.success('Rate deleted successfully')
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to delete rate'
-      toast.error(message)
     },
   })
 }

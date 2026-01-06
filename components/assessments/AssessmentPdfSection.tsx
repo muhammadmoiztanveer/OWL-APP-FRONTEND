@@ -32,7 +32,7 @@ export default function AssessmentPdfSection({
     enabled: !!assessmentId,
     refetchInterval: (data) => {
       if (!data) return false
-      const statusState = getPdfStatusState(data)
+      const statusState = getPdfStatusState(data as any)
       // Poll every 3 seconds if generating or pending
       if (statusState === 'generating' || statusState === 'pending') {
         return 3000
@@ -41,6 +41,7 @@ export default function AssessmentPdfSection({
       return false
     },
   })
+  const pdfStatusTyped = pdfStatus as any
 
   const downloadMutation = useDownloadPdf()
   const regenerateMutation = useRegeneratePdf()
@@ -48,7 +49,7 @@ export default function AssessmentPdfSection({
   // Determine if we should show polling message
   const shouldPoll = pdfStatus
     ? (() => {
-        const statusState = getPdfStatusState(pdfStatus)
+        const statusState = getPdfStatusState(pdfStatusTyped)
         return statusState === 'generating' || statusState === 'pending'
       })()
     : false
@@ -57,12 +58,12 @@ export default function AssessmentPdfSection({
   useEffect(() => {
     if (process.env.NODE_ENV === 'development' && pdfStatus) {
       console.log('PDF Status:', {
-        has_pdf: pdfStatus.has_pdf,
-        queue_status: pdfStatus.queue_status,
-        queue_error: pdfStatus.queue_error,
-        queue_attempts: pdfStatus.queue_attempts,
+        has_pdf: pdfStatusTyped.has_pdf,
+        queue_status: pdfStatusTyped.queue_status,
+        queue_error: pdfStatusTyped.queue_error,
+        queue_attempts: pdfStatusTyped.queue_attempts,
         shouldPoll,
-        statusState: getPdfStatusState(pdfStatus),
+        statusState: getPdfStatusState(pdfStatusTyped),
       })
     }
   }, [pdfStatus, shouldPoll])
@@ -83,13 +84,12 @@ export default function AssessmentPdfSection({
     regenerateMutation.mutate(assessmentId, {
       onSuccess: () => {
         // Start polling after regeneration
-        setShouldPoll(true)
         refetch()
       },
     })
   }
 
-  const statusState = getPdfStatusState(pdfStatus)
+  const statusState = getPdfStatusState(pdfStatusTyped)
 
   return (
     <div className="card mb-4">
@@ -107,15 +107,15 @@ export default function AssessmentPdfSection({
           <>
             <div className="d-flex align-items-center gap-3 mb-3">
               <PdfStatusBadge status={statusState} />
-              {pdfStatus?.report_generated_at && (
+              {pdfStatusTyped?.report_generated_at && (
                 <span className="text-muted small">
-                  Generated: {new Date(pdfStatus.report_generated_at).toLocaleString()}
+                  Generated: {new Date(pdfStatusTyped.report_generated_at).toLocaleString()}
                 </span>
               )}
             </div>
 
             <div className="d-flex flex-wrap gap-2 mb-3">
-              {pdfStatus?.has_pdf && (
+              {pdfStatusTyped?.has_pdf && (
                 <button
                   className="btn btn-primary"
                   onClick={handleDownload}
@@ -188,11 +188,11 @@ export default function AssessmentPdfSection({
               )}
             </div>
 
-            {pdfStatus?.queue_error && (
+            {pdfStatusTyped?.queue_error && (
               <div className="alert alert-danger mt-3">
-                <strong>Error:</strong> {pdfStatus.queue_error}
-                {pdfStatus.queue_attempts > 0 && (
-                  <div className="small mt-1">Attempts: {pdfStatus.queue_attempts}</div>
+                <strong>Error:</strong> {pdfStatusTyped.queue_error}
+                {pdfStatusTyped.queue_attempts > 0 && (
+                  <div className="small mt-1">Attempts: {pdfStatusTyped.queue_attempts}</div>
                 )}
               </div>
             )}

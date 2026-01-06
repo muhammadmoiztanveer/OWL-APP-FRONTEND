@@ -22,18 +22,11 @@ export function useDashboardStats() {
       }
       const response = await doctorApi.getDashboard()
       if (!response.success) {
-        throw new Error(response.message || 'Failed to fetch dashboard data')
+        throw new Error((response as any).message || 'Failed to fetch dashboard data')
       }
       return response.data
     },
     enabled: hasPermission('patient.view'),
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view dashboard')
-      } else {
-        toast.error(error.message || 'Failed to load dashboard data')
-      }
-    },
   })
 }
 

@@ -273,10 +273,10 @@ export default function ButtonsPage() {
             <div className="card-body">
               <h4 className="card-title">Toggle States</h4>
               <p className="card-title-desc">
-                Add <code className="highlighter-rouge">data-bs-toggle="button"</code> to toggle a button&apos;s{' '}
+                Add <code className="highlighter-rouge">data-bs-toggle=&quot;button&quot;</code> to toggle a button&apos;s{' '}
                 <code className="highlighter-rouge">active</code> state. If you&apos;re pre-toggling a button, you must manually
                 add the <code className="highlighter-rouge">.active</code> class <strong>and</strong>{' '}
-                <code className="highlighter-rouge">aria-pressed="true"</code> to the{' '}
+                <code className="highlighter-rouge">aria-pressed=&quot;true&quot;</code> to the{' '}
                 <code className="highlighter-rouge">&lt;button&gt;</code>.
               </p>
 
@@ -324,7 +324,7 @@ export default function ButtonsPage() {
               <p className="card-title-desc">
                 Bootstrap&apos;s <code className="highlighter-rouge">.button</code> styles can be applied to other elements, such
                 as <code className="highlighter-rouge">&lt;label&gt;</code>s, to provide checkbox or radio style button
-                toggling. Add <code className="highlighter-rouge">data-bs-toggle="buttons"</code> to a{' '}
+                toggling. Add <code className="highlighter-rouge">data-bs-toggle=&quot;buttons&quot;</code> to a{' '}
                 <code className="highlighter-rouge">.btn-group</code> containing those modified buttons to enable toggling in
                 their respective styles.
               </p>

@@ -15,18 +15,11 @@ export function usePatients(params?: PatientsListParams) {
       }
       const response = await doctorApi.getPatients(params)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to fetch patients')
+        throw new Error((response as any).message || 'Failed to fetch patients')
       }
       return response
     },
     enabled: hasPermission('patient.view'),
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view patients')
-      } else {
-        toast.error(error.message || 'Failed to load patients')
-      }
-    },
   })
 }
 
@@ -41,18 +34,11 @@ export function usePatient(id: number) {
       }
       const response = await doctorApi.getPatient(id)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to fetch patient')
+        throw new Error((response as any).message || 'Failed to fetch patient')
       }
       return response.data
     },
     enabled: !!id && hasPermission('patient.view'),
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view patient details')
-      } else {
-        toast.error(error.message || 'Failed to load patient')
-      }
-    },
   })
 }
 
@@ -67,7 +53,7 @@ export function useCreatePatient() {
       }
       const response = await doctorApi.createPatient(data)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to create patient')
+        throw new Error((response as any).message || 'Failed to create patient')
       }
       // ✅ NEW: Response now includes { patient, invitation } - return full data
       return response.data || response
@@ -75,18 +61,6 @@ export function useCreatePatient() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] })
       toast.success('Patient created successfully')
-    },
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to create patients')
-      } else {
-        const message =
-          error.response?.data?.message ||
-          Object.values(error.response?.data?.errors || {}).flat()[0] ||
-          error.message ||
-          'Failed to create patient'
-        toast.error(message)
-      }
     },
   })
 }
@@ -102,7 +76,7 @@ export function useUpdatePatient() {
       }
       const response = await doctorApi.updatePatient(id, data)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to update patient')
+        throw new Error((response as any).message || 'Failed to update patient')
       }
       return response.data
     },
@@ -110,18 +84,6 @@ export function useUpdatePatient() {
       queryClient.invalidateQueries({ queryKey: ['patients'] })
       queryClient.invalidateQueries({ queryKey: ['patient', variables.id] })
       toast.success('Patient updated successfully')
-    },
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to update patients')
-      } else {
-        const message =
-          error.response?.data?.message ||
-          Object.values(error.response?.data?.errors || {}).flat()[0] ||
-          error.message ||
-          'Failed to update patient'
-        toast.error(message)
-      }
     },
   })
 }
@@ -137,20 +99,13 @@ export function useDeletePatient() {
       }
       const response = await doctorApi.deletePatient(id)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to delete patient')
+        throw new Error((response as any).message || 'Failed to delete patient')
       }
       return response
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] })
       toast.success('Patient deleted successfully')
-    },
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to delete patients')
-      } else {
-        toast.error(error.message || 'Failed to delete patient')
-      }
     },
   })
 }

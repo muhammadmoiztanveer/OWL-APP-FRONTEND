@@ -22,6 +22,7 @@ export default function PackagesPage() {
     per_page: 10,
     page: currentPage,
   })
+  const packagesDataTyped = packagesData as any
   const deleteMutation = useDeletePackage()
 
   const handleCreate = () => {
@@ -98,7 +99,7 @@ export default function PackagesPage() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-              ) : packagesData?.data && packagesData.data.length > 0 ? (
+              ) : packagesDataTyped?.data && Array.isArray(packagesDataTyped.data) && packagesDataTyped.data.length > 0 ? (
                 <>
                   <div className="table-responsive">
                     <table className="table table-striped table-bordered">
@@ -113,7 +114,7 @@ export default function PackagesPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {packagesData.data.map((pkg) => (
+                        {packagesDataTyped.data.map((pkg: Package) => (
                           <tr key={pkg.id}>
                             <td>
                               <strong>{pkg.name}</strong>
@@ -163,10 +164,10 @@ export default function PackagesPage() {
                       </tbody>
                     </table>
                   </div>
-                  {packagesData.meta && (
+                  {packagesDataTyped?.meta && packagesDataTyped?.links && (
                     <Pagination
-                      currentPage={currentPage}
-                      totalPages={packagesData.meta.last_page}
+                      meta={packagesDataTyped.meta}
+                      links={packagesDataTyped.links}
                       onPageChange={setCurrentPage}
                     />
                   )}

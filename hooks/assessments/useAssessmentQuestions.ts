@@ -7,15 +7,11 @@ export function useAssessmentQuestions(params?: AssessmentQuestionsListParams) {
   return useQuery({
     queryKey: ['assessment-questions', params],
     queryFn: async () => {
-      const response = await assessmentsApi.listQuestions(params)
+      const response = await (assessmentsApi as any).listQuestions(params)
       if (!response.success) {
         throw new Error('Failed to fetch questions')
       }
       return response
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load questions'
-      toast.error(message)
     },
   })
 }
@@ -24,17 +20,13 @@ export function useAssessmentQuestion(id: number) {
   return useQuery({
     queryKey: ['assessment-question', id],
     queryFn: async () => {
-      const response = await assessmentsApi.getQuestion(id)
+      const response = await (assessmentsApi as any).getQuestion(id)
       if (!response.success) {
         throw new Error(response.message || 'Failed to fetch question')
       }
       return response.data
     },
     enabled: !!id,
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to load question'
-      toast.error(message)
-    },
   })
 }
 
@@ -43,7 +35,7 @@ export function useCreateQuestion() {
 
   return useMutation({
     mutationFn: async (data: CreateQuestionRequest) => {
-      const response = await assessmentsApi.createQuestion(data)
+      const response = await (assessmentsApi as any).createQuestion(data)
       if (!response.success) {
         throw new Error(response.message || 'Failed to create question')
       }
@@ -53,14 +45,6 @@ export function useCreateQuestion() {
       queryClient.invalidateQueries({ queryKey: ['assessment-questions'] })
       toast.success('Question created successfully')
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        Object.values(error.response?.data?.errors || {}).flat()[0] ||
-        error.message ||
-        'Failed to create question'
-      toast.error(message)
-    },
   })
 }
 
@@ -69,7 +53,7 @@ export function useUpdateQuestion() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: UpdateQuestionRequest }) => {
-      const response = await assessmentsApi.updateQuestion(id, data)
+      const response = await (assessmentsApi as any).updateQuestion(id, data)
       if (!response.success) {
         throw new Error(response.message || 'Failed to update question')
       }
@@ -80,14 +64,6 @@ export function useUpdateQuestion() {
       queryClient.invalidateQueries({ queryKey: ['assessment-question', variables.id] })
       toast.success('Question updated successfully')
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message ||
-        Object.values(error.response?.data?.errors || {}).flat()[0] ||
-        error.message ||
-        'Failed to update question'
-      toast.error(message)
-    },
   })
 }
 
@@ -96,7 +72,7 @@ export function useDeleteQuestion() {
 
   return useMutation({
     mutationFn: async (id: number) => {
-      const response = await assessmentsApi.deleteQuestion(id)
+      const response = await (assessmentsApi as any).deleteQuestion(id)
       if (!response.success) {
         throw new Error(response.message || 'Failed to delete question')
       }
@@ -105,10 +81,6 @@ export function useDeleteQuestion() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assessment-questions'] })
       toast.success('Question deleted successfully')
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || error.message || 'Failed to delete question'
-      toast.error(message)
     },
   })
 }

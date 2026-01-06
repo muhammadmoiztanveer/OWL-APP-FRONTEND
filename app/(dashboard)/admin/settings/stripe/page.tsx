@@ -12,6 +12,7 @@ const WEBHOOK_URL = `${API_BASE_URL}/stripe/webhook`
 
 export default function StripeSettingsPage() {
   const { data: settings, isLoading, refetch } = useStripeSettings()
+  const settingsData = settings as any
   const testConnectionMutation = useTestStripeConnection()
   const updateSettingMutation = useUpdateSetting()
 
@@ -75,7 +76,7 @@ export default function StripeSettingsPage() {
 
   if (isLoading) {
     return (
-      <PermissionGate permission="settings.manage" fallback={<UnauthorizedMessage />}>
+      <PermissionGate permission="settingsData.manage" fallback={<UnauthorizedMessage />}>
         <Breadcrumb pagetitle="Settings" title="Stripe Configuration" />
         <div className="text-center py-5">
           <div className="spinner-border text-primary" role="status">
@@ -87,7 +88,7 @@ export default function StripeSettingsPage() {
   }
 
   return (
-    <PermissionGate permission="settings.manage" fallback={<UnauthorizedMessage />}>
+    <PermissionGate permission="settingsData.manage" fallback={<UnauthorizedMessage />}>
       <Breadcrumb pagetitle="Settings" title="Stripe Configuration" />
 
       <div className="row">
@@ -101,7 +102,7 @@ export default function StripeSettingsPage() {
               <div className="d-flex align-items-center justify-content-between">
                 <div>
                   <div className="d-flex align-items-center mb-2">
-                    {settings?.connection_status.connected ? (
+                    {settingsData?.connection_status.connected ? (
                       <>
                         <i className="mdi mdi-check-circle text-success me-2" style={{ fontSize: '24px' }}></i>
                         <span className="badge bg-success-subtle text-success">Connected</span>
@@ -113,14 +114,14 @@ export default function StripeSettingsPage() {
                       </>
                     )}
                   </div>
-                  <p className="text-muted mb-0">{settings?.connection_status.message}</p>
-                  {settings?.connection_status.account_id && (
+                  <p className="text-muted mb-0">{settingsData?.connection_status.message}</p>
+                  {settingsData?.connection_status.account_id && (
                     <p className="text-muted small mb-0">
-                      Account ID: {settings.connection_status.account_id}
+                      Account ID: {settingsData.connection_status.account_id}
                     </p>
                   )}
-                  {settings?.connection_status.email && (
-                    <p className="text-muted small mb-0">Email: {settings.connection_status.email}</p>
+                  {settingsData?.connection_status.email && (
+                    <p className="text-muted small mb-0">Email: {settingsData.connection_status.email}</p>
                   )}
                 </div>
                 <button
@@ -161,7 +162,7 @@ export default function StripeSettingsPage() {
                     value={publicKey}
                     onChange={(e) => setPublicKey(e.target.value)}
                     placeholder={
-                      settings?.public_key_configured
+                      settingsData?.public_key_configured
                         ? '***encrypted*** (enter new key to update)'
                         : 'Enter Stripe Publishable Key (pk_...)'
                     }
@@ -186,7 +187,7 @@ export default function StripeSettingsPage() {
                     )}
                   </button>
                 </div>
-                {settings?.public_key_configured && (
+                {settingsData?.public_key_configured && (
                   <small className="text-success">
                     <i className="mdi mdi-check-circle me-1"></i>Key is configured
                   </small>
@@ -205,7 +206,7 @@ export default function StripeSettingsPage() {
                     value={secretKey}
                     onChange={(e) => setSecretKey(e.target.value)}
                     placeholder={
-                      settings?.secret_key_configured
+                      settingsData?.secret_key_configured
                         ? '***encrypted*** (enter new key to update)'
                         : 'Enter Stripe Secret Key (sk_...)'
                     }
@@ -230,7 +231,7 @@ export default function StripeSettingsPage() {
                     )}
                   </button>
                 </div>
-                {settings?.secret_key_configured && (
+                {settingsData?.secret_key_configured && (
                   <small className="text-success">
                     <i className="mdi mdi-check-circle me-1"></i>Key is configured
                   </small>
@@ -249,7 +250,7 @@ export default function StripeSettingsPage() {
                     value={webhookSecret}
                     onChange={(e) => setWebhookSecret(e.target.value)}
                     placeholder={
-                      settings?.webhook_secret_configured
+                      settingsData?.webhook_secret_configured
                         ? '***encrypted*** (enter new secret to update)'
                         : 'Enter Stripe Webhook Secret (whsec_...)'
                     }
@@ -274,7 +275,7 @@ export default function StripeSettingsPage() {
                     )}
                   </button>
                 </div>
-                {settings?.webhook_secret_configured && (
+                {settingsData?.webhook_secret_configured && (
                   <small className="text-success">
                     <i className="mdi mdi-check-circle me-1"></i>Webhook secret is configured
                   </small>

@@ -62,6 +62,7 @@ export default function AdminAssessmentDetailPage() {
   const [fullAssessment, setFullAssessment] = useState<any>(null)
 
   const { data: assessment, isLoading, error } = useAdminAssessment(id)
+  const assessmentData = assessment as any
 
   useEffect(() => {
     refreshProfile().catch(() => {
@@ -72,7 +73,7 @@ export default function AdminAssessmentDetailPage() {
 
   const handleViewResponses = async () => {
     // Try to get patient_id from multiple possible locations
-    const patientId = assessment?.patient_id || assessment?.patient?.id
+    const patientId = assessmentData?.patient_id || assessmentData?.patient?.id
 
     if (!patientId) {
       console.error('Assessment data:', assessment)
@@ -82,7 +83,7 @@ export default function AdminAssessmentDetailPage() {
 
     setLoadingResponses(true)
     try {
-      const response = await adminApi.getPatientAssessmentResponses(patientId, assessment.id)
+      const response = await adminApi.getPatientAssessmentResponses(patientId, assessmentData?.id)
       if (response.success && response.data) {
         setFullAssessment(response.data)
         setShowResponsesModal(true)
@@ -110,7 +111,7 @@ export default function AdminAssessmentDetailPage() {
     return (
       <>
         <Breadcrumb pagetitle="MENTAL HEALTH ASSESSMENT SYSTEM" title="Assessment Details" />
-        <UnauthorizedMessage message="You do not have permission to view this assessment." />
+        <UnauthorizedMessage message="You do not have permission to view this assessmentData." />
       </>
     )
   }
@@ -125,7 +126,7 @@ export default function AdminAssessmentDetailPage() {
               <div className="card-body text-center py-5">
                 <i className="uil-exclamation-octagon font-size-48 text-warning"></i>
                 <h4 className="mt-3 mb-2">Assessment Not Found</h4>
-                <p className="text-muted">The assessment you're looking for doesn't exist or has been removed.</p>
+                <p className="text-muted">The assessment you&apos;re looking for doesn&apos;t exist or has been removed.</p>
                 <Link href="/admin/assessments" className="btn btn-primary mt-3">
                   Back to Assessments
                 </Link>
@@ -169,9 +170,9 @@ export default function AdminAssessmentDetailPage() {
     )
   }
 
-  const severity = assessment.severity as Severity | { phq9: Severity; gad7: Severity } | undefined
-  const recommendation = assessment.recommendation as string | { phq9: string; gad7: string } | undefined
-  const isComprehensive = assessment.assessment_type === 'comprehensive'
+  const severity = assessmentData.severity as Severity | { phq9: Severity; gad7: Severity } | undefined
+  const recommendation = assessmentData.recommendation as string | { phq9: string; gad7: string } | undefined
+  const isComprehensive = assessmentData?.assessment_type === 'comprehensive'
 
   return (
     <>
@@ -183,11 +184,11 @@ export default function AdminAssessmentDetailPage() {
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                  <h4 className="card-title mb-0">{formatAssessmentType(assessment.assessment_type)}</h4>
-                  <p className="text-muted mb-0">Assessment ID: #{assessment.id}</p>
+                  <h4 className="card-title mb-0">{formatAssessmentType(assessmentData.assessment_type)}</h4>
+                  <p className="text-muted mb-0">Assessment ID: #{assessmentData.id}</p>
                 </div>
                 <div className="d-flex gap-2 align-items-center">
-                  <StatusBadge status={assessment.status} />
+                  <StatusBadge status={assessmentData.status} />
                 </div>
               </div>
 
@@ -201,15 +202,15 @@ export default function AdminAssessmentDetailPage() {
                         <tbody>
                           <tr>
                             <th style={{ width: '40%' }}>Name:</th>
-                            <td>{assessment.patient?.name || 'N/A'}</td>
+                            <td>{assessmentData.patient?.name || 'N/A'}</td>
                           </tr>
                           <tr>
                             <th>Email:</th>
-                            <td>{assessment.patient?.email || 'N/A'}</td>
+                            <td>{assessmentData.patient?.email || 'N/A'}</td>
                           </tr>
                           <tr>
                             <th>Patient ID:</th>
-                            <td>#{assessment.patient_id}</td>
+                            <td>#{assessmentData.patient_id}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -225,34 +226,34 @@ export default function AdminAssessmentDetailPage() {
                           <tr>
                             <th style={{ width: '40%' }}>Doctor:</th>
                             <td>
-                              {assessment.doctor?.first_name && assessment.doctor?.last_name
-                                ? `${assessment.doctor.first_name} ${assessment.doctor.last_name}`
-                                : assessment.doctor?.full_name || 'N/A'}
+                              {assessmentData.doctor?.first_name && assessmentData.doctor?.last_name
+                                ? `${assessmentData.doctor.first_name} ${assessmentData.doctor.last_name}`
+                                : assessmentData.doctor?.full_name || 'N/A'}
                             </td>
                           </tr>
                           <tr>
                             <th>Email:</th>
-                            <td>{assessment.doctor?.email || 'N/A'}</td>
+                            <td>{assessmentData.doctor?.email || 'N/A'}</td>
                           </tr>
                           <tr>
                             <th>Practice:</th>
-                            <td>{assessment.doctor?.practice_name || 'N/A'}</td>
+                            <td>{assessmentData.doctor?.practice_name || 'N/A'}</td>
                           </tr>
-                          {assessment.assessment_order?.assigned_by_doctor && (
+                          {assessmentData.assessment_order?.assigned_by_doctor && (
                             <>
                               <tr>
                                 <th className="pt-2">Assigned By:</th>
                                 <td className="pt-2">
-                                  {assessment.assessment_order.assigned_by_doctor.first_name &&
-                                  assessment.assessment_order.assigned_by_doctor.last_name
-                                    ? `${assessment.assessment_order.assigned_by_doctor.first_name} ${assessment.assessment_order.assigned_by_doctor.last_name}`
-                                    : assessment.assessment_order.assigned_by_doctor.full_name || 'N/A'}
+                                  {assessmentData.assessment_order.assigned_by_doctor.first_name &&
+                                  assessmentData.assessment_order.assigned_by_doctor.last_name
+                                    ? `${assessmentData.assessment_order.assigned_by_doctor.first_name} ${assessmentData.assessment_order.assigned_by_doctor.last_name}`
+                                    : assessmentData.assessment_order.assigned_by_doctor.full_name || 'N/A'}
                                 </td>
                               </tr>
-                              {assessment.assessment_order.assigned_by_doctor.practice_name && (
+                              {assessmentData.assessment_order.assigned_by_doctor.practice_name && (
                                 <tr>
                                   <th>Assigned By Practice:</th>
-                                  <td>{assessment.assessment_order.assigned_by_doctor.practice_name}</td>
+                                  <td>{assessmentData.assessment_order.assigned_by_doctor.practice_name}</td>
                                 </tr>
                               )}
                             </>
@@ -272,42 +273,42 @@ export default function AdminAssessmentDetailPage() {
                     <tbody>
                       <tr>
                         <th style={{ width: '30%' }}>Assessment Type</th>
-                        <td>{formatAssessmentType(assessment.assessment_type)}</td>
+                        <td>{formatAssessmentType(assessmentData.assessment_type)}</td>
                       </tr>
                       <tr>
                         <th>Status</th>
                         <td>
-                          <StatusBadge status={assessment.status} />
+                          <StatusBadge status={assessmentData.status} />
                         </td>
                       </tr>
-                      {assessment.completed_on && (
+                      {assessmentData.completed_on && (
                         <tr>
                           <th>Completed On</th>
-                          <td>{formatDate(assessment.completed_on)}</td>
+                          <td>{formatDate(assessmentData.completed_on)}</td>
                         </tr>
                       )}
-                      {assessment.reviewed_at && (
+                      {assessmentData.reviewed_at && (
                         <tr>
                           <th>Reviewed On</th>
-                          <td>{formatDate(assessment.reviewed_at)}</td>
+                          <td>{formatDate(assessmentData.reviewed_at)}</td>
                         </tr>
                       )}
-                      {assessment.assessment_order && (
+                      {assessmentData.assessment_order && (
                         <>
                           <tr>
                             <th>Ordered On</th>
-                            <td>{formatDate(assessment.assessment_order.ordered_on)}</td>
+                            <td>{formatDate(assessmentData.assessment_order.ordered_on)}</td>
                           </tr>
-                          {assessment.assessment_order.sent_at && (
+                          {assessmentData.assessment_order.sent_at && (
                             <tr>
                               <th>Sent At</th>
-                              <td>{formatDate(assessment.assessment_order.sent_at)}</td>
+                              <td>{formatDate(assessmentData.assessment_order.sent_at)}</td>
                             </tr>
                           )}
-                          {assessment.assessment_order.instructions && (
+                          {assessmentData.assessment_order.instructions && (
                             <tr>
                               <th>Instructions</th>
-                              <td>{assessment.assessment_order.instructions}</td>
+                              <td>{assessmentData.assessment_order.instructions}</td>
                             </tr>
                           )}
                         </>
@@ -326,7 +327,7 @@ export default function AdminAssessmentDetailPage() {
                       <div className="card border">
                         <div className="card-body">
                           <h6 className="card-title">PHQ-9 Score</h6>
-                          <h3 className="text-primary">{assessment.phq9_score || 'N/A'}</h3>
+                          <h3 className="text-primary">{assessmentData.phq9_score || 'N/A'}</h3>
                           {severity && typeof severity === 'object' && 'phq9' in severity && (
                             <div className="mt-2">
                               <span className={`badge bg-${getSeverityColor(severity.phq9.level)}`}>
@@ -342,7 +343,7 @@ export default function AdminAssessmentDetailPage() {
                       <div className="card border">
                         <div className="card-body">
                           <h6 className="card-title">GAD-7 Score</h6>
-                          <h3 className="text-primary">{assessment.gad7_score || 'N/A'}</h3>
+                          <h3 className="text-primary">{assessmentData.gad7_score || 'N/A'}</h3>
                           {severity && typeof severity === 'object' && 'gad7' in severity && (
                             <div className="mt-2">
                               <span className={`badge bg-${getSeverityColor(severity.gad7.level)}`}>
@@ -359,7 +360,7 @@ export default function AdminAssessmentDetailPage() {
                   <div className="card border">
                     <div className="card-body">
                       <h6 className="card-title">Total Score</h6>
-                      <h3 className="text-primary">{assessment.score}</h3>
+                      <h3 className="text-primary">{assessmentData.score}</h3>
                       {severity && typeof severity === 'object' && 'level' in severity && (
                         <div className="mt-2">
                           <span className={`badge bg-${getSeverityColor(severity.level)}`}>
@@ -374,7 +375,7 @@ export default function AdminAssessmentDetailPage() {
               </div>
 
               {/* Suicide Risk Warning */}
-              {assessment.suicide_risk !== undefined && assessment.suicide_risk > 0 && (
+              {assessmentData.suicide_risk !== undefined && assessmentData.suicide_risk > 0 && (
                 <div className="alert alert-danger mb-4">
                   <strong>Important:</strong> This assessment indicated elevated suicide risk. Please review this case
                   with appropriate urgency and consider immediate intervention if necessary.
@@ -382,7 +383,7 @@ export default function AdminAssessmentDetailPage() {
               )}
 
               {/* View Responses Button - Show for completed/reviewed assessments */}
-              {(assessment.status === 'completed' || assessment.status === 'reviewed') && (
+              {(assessmentData.status === 'completed' || assessmentData.status === 'reviewed') && (
                 <div className="mb-4">
                   <div className="card border-primary">
                     <div className="card-body text-center">
@@ -432,16 +433,16 @@ export default function AdminAssessmentDetailPage() {
               )}
 
               {/* PDF Section */}
-              {assessment.status === 'completed' && (
-                <AssessmentPdfSection assessmentId={assessment.id} assessment={assessment} />
+              {assessmentData.status === 'completed' && (
+                <AssessmentPdfSection assessmentId={assessmentData.id} assessment={assessmentData as any} />
               )}
 
               {/* Create Invoice Section */}
-              {assessment.status === 'completed' && hasPermission('billing.create') && (
+              {assessmentData.status === 'completed' && hasPermission('billing.create') && (
                 <div className="card mb-4">
                   <div className="card-body">
                     <h5 className="card-title mb-3">Billing</h5>
-                    <CreateInvoiceFromAssessmentButton assessmentId={assessment.id} />
+                    <CreateInvoiceFromAssessmentButton assessmentId={assessmentData.id} />
                   </div>
                 </div>
               )}
@@ -468,7 +469,7 @@ export default function AdminAssessmentDetailPage() {
           }}
           responses={fullAssessment.responses}
           assessment={fullAssessment}
-          patientName={assessment.patient?.name}
+          patientName={assessmentData.patient?.name}
           title={`Assessment Responses - ${formatAssessmentType(fullAssessment.assessment_type)}`}
         />
       )}

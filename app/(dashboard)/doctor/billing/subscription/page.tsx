@@ -24,6 +24,7 @@ const formatCurrency = (amount: number) => {
 
 export default function DoctorSubscriptionPage() {
   const { data: subscription, isLoading, refetch } = useCurrentSubscription()
+  const subscriptionData = subscription as any
   const cancelMutation = useCancelSubscription()
 
   const handleCancel = async () => {
@@ -45,7 +46,7 @@ export default function DoctorSubscriptionPage() {
     if (reason !== undefined) {
       try {
         if (subscription) {
-          await cancelMutation.mutateAsync({ id: subscription.id, reason: reason || undefined })
+          await cancelMutation.mutateAsync({ id: subscriptionData.id, reason: reason || undefined })
           refetch()
         }
       } catch (error) {
@@ -77,7 +78,7 @@ export default function DoctorSubscriptionPage() {
               <div className="card-body text-center py-5">
                 <i className="mdi mdi-package-variant text-muted" style={{ fontSize: '64px' }}></i>
                 <h4 className="mt-3">No Active Subscription</h4>
-                <p className="text-muted">You don't have an active subscription yet.</p>
+                <p className="text-muted">You don&apos;t have an active subscription yet.</p>
               </div>
             </div>
           </div>
@@ -95,7 +96,7 @@ export default function DoctorSubscriptionPage() {
           <div className="card">
             <div className="card-header d-flex justify-content-between align-items-center">
               <h4 className="card-title mb-0">Current Subscription</h4>
-              {subscription.status === 'active' && (
+              {subscriptionData.status === 'active' && (
                 <button
                   className="btn btn-danger"
                   onClick={handleCancel}
@@ -117,9 +118,9 @@ export default function DoctorSubscriptionPage() {
             <div className="card-body">
               <div className="row">
                 <div className="col-md-6">
-                  <h5>{subscription.package?.name || 'N/A'}</h5>
-                  {subscription.package?.description && (
-                    <p className="text-muted">{subscription.package.description}</p>
+                  <h5>{subscriptionData.package?.name || 'N/A'}</h5>
+                  {subscriptionData.package?.description && (
+                    <p className="text-muted">{subscriptionData.package.description}</p>
                   )}
 
                   <div className="mt-4">
@@ -129,9 +130,9 @@ export default function DoctorSubscriptionPage() {
                         <tr>
                           <td><strong>Status:</strong></td>
                           <td>
-                            {subscription.status === 'active' ? (
+                            {subscriptionData.status === 'active' ? (
                               <span className="badge bg-success-subtle text-success">Active</span>
-                            ) : subscription.status === 'suspended' ? (
+                            ) : subscriptionData.status === 'suspended' ? (
                               <span className="badge bg-warning-subtle text-warning">Suspended</span>
                             ) : (
                               <span className="badge bg-secondary-subtle text-secondary">Cancelled</span>
@@ -140,39 +141,39 @@ export default function DoctorSubscriptionPage() {
                         </tr>
                         <tr>
                           <td><strong>Billing Cycle:</strong></td>
-                          <td className="text-capitalize">{subscription.billing_cycle}</td>
+                          <td className="text-capitalize">{subscriptionData.billing_cycle}</td>
                         </tr>
                         <tr>
                           <td><strong>Monthly Price:</strong></td>
                           <td>
-                            {subscription.package?.monthly_price
-                              ? formatCurrency(subscription.package.monthly_price)
+                            {subscriptionData.package?.monthly_price
+                              ? formatCurrency(subscriptionData.package.monthly_price)
                               : '-'}
                           </td>
                         </tr>
-                        {subscription.billing_cycle === 'yearly' && subscription.package?.yearly_price && (
+                        {subscriptionData.billing_cycle === 'yearly' && subscriptionData.package?.yearly_price && (
                           <tr>
                             <td><strong>Yearly Price:</strong></td>
-                            <td>{formatCurrency(subscription.package.yearly_price)}</td>
+                            <td>{formatCurrency(subscriptionData.package.yearly_price)}</td>
                           </tr>
                         )}
                         <tr>
                           <td><strong>Start Date:</strong></td>
-                          <td>{formatDate(subscription.start_date)}</td>
+                          <td>{formatDate(subscriptionData.start_date)}</td>
                         </tr>
                         <tr>
                           <td><strong>Next Billing Date:</strong></td>
-                          <td>{formatDate(subscription.next_billing_date)}</td>
+                          <td>{formatDate(subscriptionData.next_billing_date)}</td>
                         </tr>
-                        {subscription.stripe_current_period_start && subscription.stripe_current_period_end && (
+                        {subscriptionData.stripe_current_period_start && subscriptionData.stripe_current_period_end && (
                           <>
                             <tr>
                               <td><strong>Current Period Start:</strong></td>
-                              <td>{formatDate(subscription.stripe_current_period_start)}</td>
+                              <td>{formatDate(subscriptionData.stripe_current_period_start)}</td>
                             </tr>
                             <tr>
                               <td><strong>Current Period End:</strong></td>
-                              <td>{formatDate(subscription.stripe_current_period_end)}</td>
+                              <td>{formatDate(subscriptionData.stripe_current_period_end)}</td>
                             </tr>
                           </>
                         )}
@@ -182,11 +183,11 @@ export default function DoctorSubscriptionPage() {
                 </div>
 
                 <div className="col-md-6">
-                  {subscription.package?.features && subscription.package.features.length > 0 && (
+                  {subscriptionData.package?.features && subscriptionData.package.features.length > 0 && (
                     <div>
                       <h6>Package Features</h6>
                       <ul className="list-unstyled">
-                        {subscription.package.features.map((feature, index) => (
+                            {subscriptionData.package.features.map((feature: any, index: number) => (
                           <li key={index} className="mb-2">
                             <i className="mdi mdi-check-circle text-success me-2"></i>
                             {feature}
@@ -196,27 +197,27 @@ export default function DoctorSubscriptionPage() {
                     </div>
                   )}
 
-                  {subscription.package?.max_patients && (
+                  {subscriptionData.package?.max_patients && (
                     <div className="mt-3">
-                      <strong>Max Patients:</strong> {subscription.package.max_patients === -1 ? 'Unlimited' : subscription.package.max_patients}
+                      <strong>Max Patients:</strong> {subscriptionData.package.max_patients === -1 ? 'Unlimited' : subscriptionData.package.max_patients}
                     </div>
                   )}
 
-                  {subscription.package?.max_assessments_per_month && (
+                  {subscriptionData.package?.max_assessments_per_month && (
                     <div className="mt-2">
                       <strong>Max Assessments/Month:</strong>{' '}
-                      {subscription.package.max_assessments_per_month === -1
+                      {subscriptionData.package.max_assessments_per_month === -1
                         ? 'Unlimited'
-                        : subscription.package.max_assessments_per_month}
+                        : subscriptionData.package.max_assessments_per_month}
                     </div>
                   )}
 
-                  {subscription.cancelled_at && (
+                  {subscriptionData.cancelled_at && (
                     <div className="alert alert-warning mt-3">
-                      <strong>Cancelled:</strong> {formatDate(subscription.cancelled_at)}
-                      {subscription.cancellation_reason && (
+                      <strong>Cancelled:</strong> {formatDate(subscriptionData.cancelled_at)}
+                      {subscriptionData.cancellation_reason && (
                         <div className="mt-2">
-                          <strong>Reason:</strong> {subscription.cancellation_reason}
+                          <strong>Reason:</strong> {subscriptionData.cancellation_reason}
                         </div>
                       )}
                     </div>

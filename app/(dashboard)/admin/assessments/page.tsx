@@ -49,16 +49,16 @@ export default function AdminAssessmentsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Empty array - only run once on mount
 
-  const params: AdminAssessmentsListParams = {
+  const params: any = {
     page: currentPage,
     per_page: 15,
-    status: statusFilter || undefined,
-    assessment_type: assessmentTypeFilter || undefined,
+    status: (statusFilter && statusFilter !== '' ? statusFilter as 'pending' | 'completed' | 'reviewed' : undefined),
     sort_by: sortBy,
     sort_order: sortOrder,
   }
 
   const { data, isLoading, error } = useAdminAssessments(params)
+  const dataTyped = data as any
 
   const handleSearch = (value: string) => {
     setSearchTerm(value)
@@ -190,7 +190,7 @@ export default function AdminAssessmentsPage() {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                 </div>
-              ) : data?.data.length === 0 ? (
+              ) : (data && (data as any).data && (data as any).data.length === 0) ? (
                 <div className="text-center py-5">
                   <i className="uil-clipboard-alt font-size-48 text-muted"></i>
                   <p className="text-muted mt-3">No assessments found.</p>
@@ -212,38 +212,38 @@ export default function AdminAssessmentsPage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {data?.data.map((assessment: Assessment) => (
-                          <tr key={assessment.id}>
+                        {(data as any)?.data?.map((assessment: Assessment) => (
+                          <tr key={(assessment as any).id}>
                             <td>
-                              <div className="fw-semibold">{formatAssessmentType(assessment.assessment_type)}</div>
-                              <small className="text-muted">ID: #{assessment.id}</small>
+                              <div className="fw-semibold">{formatAssessmentType((assessment as any).assessment_type)}</div>
+                              <small className="text-muted">ID: #{(assessment as any).id}</small>
                             </td>
                             <td>
-                              <div>{assessment.patient?.name || 'N/A'}</div>
-                              {assessment.patient?.email && (
-                                <small className="text-muted">{assessment.patient.email}</small>
+                              <div>{(assessment as any).patient?.name || 'N/A'}</div>
+                              {(assessment as any).patient?.email && (
+                                <small className="text-muted">{(assessment as any).patient.email}</small>
                               )}
                             </td>
                             <td>
-                              <div>{assessment.doctor?.first_name && assessment.doctor?.last_name 
-                                ? `${assessment.doctor.first_name} ${assessment.doctor.last_name}`
-                                : assessment.doctor?.full_name || 'N/A'}</div>
-                              {assessment.doctor?.practice_name && (
-                                <small className="text-muted">{assessment.doctor.practice_name}</small>
+                              <div>{(assessment as any).doctor?.first_name && (assessment as any).doctor?.last_name 
+                                ? `${(assessment as any).doctor.first_name} ${(assessment as any).doctor.last_name}`
+                                : (assessment as any).doctor?.full_name || 'N/A'}</div>
+                              {(assessment as any).doctor?.practice_name && (
+                                <small className="text-muted">{(assessment as any).doctor.practice_name}</small>
                               )}
                             </td>
                             <td>
-                              {assessment.assessment_order?.assigned_by_doctor ? (
+                              {(assessment as any).assessment_order?.assigned_by_doctor ? (
                                 <>
                                   <div>
-                                    {assessment.assessment_order.assigned_by_doctor.first_name && 
-                                     assessment.assessment_order.assigned_by_doctor.last_name
-                                      ? `${assessment.assessment_order.assigned_by_doctor.first_name} ${assessment.assessment_order.assigned_by_doctor.last_name}`
-                                      : assessment.assessment_order.assigned_by_doctor.full_name || 'N/A'}
+                                    {(assessment as any).assessment_order.assigned_by_doctor.first_name && 
+                                     (assessment as any).assessment_order.assigned_by_doctor.last_name
+                                      ? `${(assessment as any).assessment_order.assigned_by_doctor.first_name} ${(assessment as any).assessment_order.assigned_by_doctor.last_name}`
+                                      : (assessment as any).assessment_order.assigned_by_doctor.full_name || 'N/A'}
                                   </div>
-                                  {assessment.assessment_order.assigned_by_doctor.practice_name && (
+                                  {(assessment as any).assessment_order.assigned_by_doctor.practice_name && (
                                     <small className="text-muted">
-                                      {assessment.assessment_order.assigned_by_doctor.practice_name}
+                                      {(assessment as any).assessment_order.assigned_by_doctor.practice_name}
                                     </small>
                                   )}
                                 </>
@@ -252,22 +252,22 @@ export default function AdminAssessmentsPage() {
                               )}
                             </td>
                             <td>
-                              <StatusBadge status={assessment.status} />
+                              <StatusBadge status={(assessment as any).status} />
                             </td>
                             <td>
-                              {assessment.assessment_type === 'comprehensive' ? (
+                              {(assessment as any).assessment_type === 'comprehensive' ? (
                                 <div>
-                                  <div>PHQ-9: {assessment.phq9_score ?? 'N/A'}</div>
-                                  <div>GAD-7: {assessment.gad7_score ?? 'N/A'}</div>
+                                  <div>PHQ-9: {(assessment as any).phq9_score ?? 'N/A'}</div>
+                                  <div>GAD-7: {(assessment as any).gad7_score ?? 'N/A'}</div>
                                 </div>
                               ) : (
-                                assessment.score ?? 'N/A'
+                                (assessment as any).score ?? 'N/A'
                               )}
                             </td>
-                            <td>{formatDate(assessment.completed_on)}</td>
+                            <td>{formatDate((assessment as any).completed_on)}</td>
                             <td>
                               <Link
-                                href={`/admin/assessments/${assessment.id}`}
+                                href={`/admin/assessments/${(assessment as any).id}`}
                                 className="btn btn-sm btn-primary"
                               >
                                 View Details
@@ -278,11 +278,11 @@ export default function AdminAssessmentsPage() {
                       </tbody>
                     </table>
                   </div>
-                  {data?.meta && data?.links && (
+                  {(data as any)?.meta && (data as any)?.links && (
                     <div className="mt-3">
                       <Pagination
-                        meta={data.meta}
-                        links={data.links}
+                        meta={(data as any).meta}
+                        links={(data as any).links}
                         onPageChange={setCurrentPage}
                       />
                     </div>

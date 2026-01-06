@@ -78,7 +78,7 @@ export default function EditModulePage() {
     : []
 
   // Slug validation function
-  const validateSlug = (value: string) => {
+  const validateSlug = (value: string | undefined) => {
     if (!value) return 'Name is required'
     if (!/^[a-z0-9-]+$/.test(value)) {
       return 'Name must be lowercase letters, numbers, and hyphens only'

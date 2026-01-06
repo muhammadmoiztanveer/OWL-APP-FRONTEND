@@ -15,18 +15,11 @@ export function useAssessments(params?: AssessmentsListParams) {
       }
       const response = await doctorApi.getAssessments(params)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to fetch assessments')
+        throw new Error((response as any).message || 'Failed to fetch assessments')
       }
       return response
     },
     enabled: hasPermission('assessment.view'),
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to view assessments')
-      } else {
-        toast.error(error.message || 'Failed to load assessments')
-      }
-    },
   })
 }
 
@@ -41,7 +34,7 @@ export function useAssessment(id: number) {
       }
       const response = await doctorApi.getAssessment(id)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to fetch assessment')
+        throw new Error((response as any).message || 'Failed to fetch assessment')
       }
       return response.data
     },
@@ -60,7 +53,7 @@ export function useReadyForReview(params?: { per_page?: number; page?: number })
       }
       const response = await doctorApi.getReadyForReview(params)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to fetch assessments ready for review')
+        throw new Error((response as any).message || 'Failed to fetch assessments ready for review')
       }
       return response
     },
@@ -79,7 +72,7 @@ export function usePatientAssessments(patientId: number) {
       }
       const response = await doctorApi.getPatientAssessments(patientId)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to fetch patient assessments')
+        throw new Error((response as any).message || 'Failed to fetch patient assessments')
       }
       return response.data
     },
@@ -98,7 +91,7 @@ export function useMarkAsReviewed() {
       }
       const response = await doctorApi.markAsReviewed(id)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to mark assessment as reviewed')
+        throw new Error((response as any).message || 'Failed to mark assessment as reviewed')
       }
       return response.data
     },
@@ -107,13 +100,6 @@ export function useMarkAsReviewed() {
       queryClient.invalidateQueries({ queryKey: ['assessments-ready-for-review'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
       toast.success('Assessment marked as reviewed')
-    },
-    onError: (error: any) => {
-      if (error.response?.status === 403) {
-        toast.error('You do not have permission to mark assessments as reviewed')
-      } else {
-        toast.error(error.message || 'Failed to mark assessment as reviewed')
-      }
     },
   })
 }
