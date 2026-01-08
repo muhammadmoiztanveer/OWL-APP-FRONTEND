@@ -7,7 +7,7 @@ import PermissionGate from '@/components/common/PermissionGate'
 import UnauthorizedMessage from '@/components/common/UnauthorizedMessage'
 import toast from 'react-hot-toast'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://owl-app-backend-production.up.railway.app/api'
 const WEBHOOK_URL = `${API_BASE_URL}/stripe/webhook`
 
 export default function StripeSettingsPage() {

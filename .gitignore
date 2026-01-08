@@ -31,6 +31,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# railway
+.railway
+railway.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

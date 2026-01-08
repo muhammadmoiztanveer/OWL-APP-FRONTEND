@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { ApiResponse } from '@/lib/types'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://owl-app-backend-production.up.railway.app/api'
 
 class ApiClient {
   private client: AxiosInstance

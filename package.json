@@ -4,6 +4,10 @@
   "private": true,
   "description": "Minible Admin Dashboard - Next.js Professional Edition",
   "author": "Themesbrand",
+  "engines": {
+    "node": "22.x",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
