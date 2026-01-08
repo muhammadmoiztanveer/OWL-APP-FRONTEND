@@ -277,26 +277,8 @@ function PatientPasswordSetupContent() {
 
                     <form onSubmit={handleSubmit(onSubmit)}>
                       <input type="hidden" {...register('token', { required: true })} />
-
-                      <div className="mb-3">
-                        <label className="form-label" htmlFor="password">
-                          Password <span className="text-danger">*</span>
-                        </label>
-                        <input
-                          type="password"
-                          className={`form-control form-control-lg ${errors.password ? 'is-invalid' : ''}`}
-                          id="password"
-                          placeholder="Create a strong password (min 8 characters)"
-                          {...register('password', {
-                            required: 'Password is required',
-                            minLength: {
-                              value: 8,
-                              message: 'Password must be at least 8 characters',
-                            },
-                          })}
-                        />
-                        {errors.password && <div className="invalid-feedback">{errors.password.message}</div>}
-                      </div>
+{/* comment it down to avoid password validation */}
+                      
 
                       <div className="mb-3">
                         <label className="form-label" htmlFor="password_confirmation">
