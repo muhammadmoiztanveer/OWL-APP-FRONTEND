@@ -19,6 +19,7 @@ class ApiClient {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
+      withCredentials: false, // Set to false for CORS (credentials handled via Authorization header)
     })
 
     this.setupInterceptors()
