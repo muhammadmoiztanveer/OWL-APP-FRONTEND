@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { ApiResponse } from '@/lib/types'
 
+// Ensure API URL always points to Railway backend
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://owl-app-backend-production.up.railway.app/api'
 
 class ApiClient {
